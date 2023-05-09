@@ -3,18 +3,29 @@
     ViewData["Title"] = "Category";
 }
 
-<h1>Category Index</h1>
+@if (TempData["success"] != null)
+{
+    <h2>TempData["success"]</h2>
+}
 
-<table class="table table-bordered table-striped" style="width:100%">
+<h1>Category Index</h1>
+<table class="table table-bordered table-striped" style="width:50%">
     <thead>
         <tr>
-            Category Name
+            <th></th>
         </tr>
+    </thead>
+    </table>
+
+<table class="table table-bordered table-striped" style="width:100%">
+
+    <thead>
         <tr>
-            Display Order
-        </tr>
-        <tr>
-            Date
+            <th>Category Name</th>
+            <th>Display Order</th>
+            <th>Date</th> 
+            <th>Edit</th>
+            <th>Remove</th>
         </tr>
     </thead>
     <tbody>
@@ -29,6 +40,17 @@
                 </td>
                 <td width="20%">
                     @cat.CreatedDateTime
+                </td>
+                <td>
+                    <div class="w-75 btn-group" role="group">
+                        <a asp-controller="Category" asp-action="Edit" asp-route-id="@cat.Id">Edit</a>
+                    </div>
+                </td>
+
+                <td>
+                    <div class="w-75 btn-group" role="group">
+                        <a asp-controller="Category" asp-action="Remove" asp-route-id="@cat.Id">Remove</a>
+                    </div>
                 </td>
             </tr>
         }

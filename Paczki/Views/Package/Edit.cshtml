@@ -1,0 +1,71 @@
+﻿@model dynamic;
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edytowanie paczek</h1>
+<div class="w-75 btn-group" role="group">
+    <a asp-controller="Package" asp-action="Edit" asp-route-id="@Model.Package.Id">Edytuj tę paczkę</a>
+</div>
+
+<table class="table table-bordered table-striped" style="width:100%">
+    <tr>
+        <th>ID</th>
+        <td>@Model.Package.PackageId</td>
+    </tr>
+    <tr>
+        <th>Nazwa</th>
+        <td>@Model.Package.Name</td>
+    </tr>
+    <tr>
+        <th>Opened</th>
+        <td>@Model.Package.Opened.ToString()</td>
+    </tr>
+    <tr>
+        <th>CreationDateTime</th>
+        <td>@Model.Package.CreationDateTime.ToString()</td>
+    </tr>
+    <tr>
+        <th>ClosedDateTime</th>
+        <td>@Model.Package.ClosedDateTime</td>
+    </tr>
+    <tr>
+        <th>DestinationCity</th>
+        <td>@Model.Package.DestinationCity</td>
+    </tr>
+
+</table>
+
+<h2>Lista przesyłek zarejestrowanych dla powyższej paczki:</h2>
+<table class="table table-bordered table-striped" style="width:100%">
+    <thead>
+        <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>CreationDateTime</th>
+                <th>Weight</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach(var delivery in Model.Query)
+    {
+        <tr>
+            <td>
+                @delivery.Id
+            </td>
+            <td>
+                @delivery.Name
+            </td>
+            <td>
+                @delivery.CreationDateTime.ToString()
+            </td>
+            <td>
+                @delivery.Weight
+            </td>
+            <td>
+                    <a asp-controller="Delivery" asp-action="Edit" asp-route-id="@delivery.Id">Edytuj</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
