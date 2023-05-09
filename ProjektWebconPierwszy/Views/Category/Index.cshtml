@@ -1,0 +1,40 @@
+﻿@model IEnumerable<Category>
+@{
+    ViewData["Title"] = "Category";
+}
+
+<h1>Category Index</h1>
+
+<table class="table table-bordered table-striped" style="width:100%">
+    <thead>
+        <tr>
+            Category Name
+        </tr>
+        <tr>
+            Display Order
+        </tr>
+        <tr>
+            Date
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var cat in Model)
+        {
+            <tr>
+                <td width="50%">
+                    @cat.Name
+                </td>
+                <td width="30%">
+                    @cat.DisplayOrder
+                </td>
+                <td width="20%">
+                    @cat.CreatedDateTime
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+@*<button  class="btn btn-primary" style="width:150px">Add new category</button>*@
+<a asp-asp-controller="Category" asp-action="Create" class="btn btn-secondary" style="width:150px">
+    Add new category
+</a>
