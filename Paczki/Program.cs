@@ -1,5 +1,7 @@
 using Paczki;
 using Microsoft.EntityFrameworkCore;
+using Paczki.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -7,6 +9,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
     builder.Configuration.GetConnectionString("DefaultConnection")
     ));
+builder.Services.AddScoped<IRepository,Repository>();
+//builder.Services.AddScoped
 var app = builder.Build();
 
 //// Configure the HTTP request pipeline.

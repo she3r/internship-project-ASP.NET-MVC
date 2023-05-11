@@ -1,21 +1,24 @@
 ﻿using Paczki.Models;
 using Microsoft.AspNetCore.Mvc;
 using Paczki;
-using System.Dynamic;
+using Newtonsoft.Json;
+using Paczki.Dto;
+using Paczki.Repositories;
 
 namespace Paczki.Controllers
 {
     public class PackageController : Controller
     {
-        private readonly AppDbContext _db;
-        public PackageController(AppDbContext db)
+
+        private readonly IRepository _repository;
+        public PackageController(IRepository repo)
         {
-            _db = db;
+            _repository = repo;
         }
         public IActionResult Index()
         {
-            IEnumerable<Package> objCategoryList = _db.Packages.ToList();
-            return View(objCategoryList);
+            IEnumerable<Package> packageList = _repository.GetAllPackages();
+            return View(packageList);
         }
 
         // GET
@@ -30,9 +33,12 @@ namespace Paczki.Controllers
         public IActionResult CreatePackage()
         {
             var name = Request.Form["packageName"];
+            if(name.ToString() == null)
+            {
+                return RedirectToAction("Index");
+            }
             Package package = new Package() { Name=name,CreationDateTime=DateTime.Now,Opened=true};
-            _db.Packages.Add(package);
-            _db.SaveChanges();
+            _repository.CreatePackage(package);
             return RedirectToAction("Index");
         }
 
@@ -42,34 +48,105 @@ namespace Paczki.Controllers
             {
                 return NotFound();
             }
-            var packageFromID = _db.Packages.Find(id);
+            var packageFromID = _repository.GetPackage(id);
 
             if (packageFromID == null)
             {
                 return NotFound();
             }
-            dynamic doubleModel = new ExpandoObject();
-            doubleModel.Package = packageFromID;
-            doubleModel.Query = _db.Deliveries.Where(d => d.PackageRefId == id).ToList();
-            return View(doubleModel);
+            var modelView = new EditPackageContentsModelView() { Package = packageFromID,
+                Query = _repository.GetPackageDeliveries(id)
+            };
+            return View(modelView);
         }
+
+        //public IActionResult TurnPage()
+        //{
+        //    int numPage = Int32.Parse(Request.Form["page-choice"]);
+        //    int id = Int32.Parse(Request.Form["package-id"]);
+        //    if (id == null | id == 0)
+        //    {
+        //        return NotFound();
+        //    }
+        //    var packageFromID = _db.Packages.Find(id);
+
+        //    if (packageFromID == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    IEnumerable<Delivery> objDeliveryList = _db.Deliveries.Where(d => d.PackageRefId == id)
+        //        .ToList();
+
+        //    int pageSize = 10;
+        //    var skip = (numPage - 1) * pageSize;
+        //    int take = pageSize;
+
+        //    var pageOfResults = objDeliveryList.Skip(skip).Take(take).ToList();
+
+        //    var modelView = new EditPackageContentsModelView()
+        //    {
+        //        Package = packageFromID,
+        //        Query = _db.Deliveries.Where(d => d.PackageRefId == id).ToList()
+        //    };
+        //    return View(modelView);
+        //}
 
 
         public IActionResult Filter()
         {
-            IEnumerable<Package> objCategoryList = _db.Packages.ToList();
+            IEnumerable<Package> packageList = _repository.GetAllPackages();
             bool ShowOpen = Request.Form["ShowOpen"].ToString() == "true" ? true : false;
             bool ShowClosed = Request.Form["ShowClosed"].ToString() == "true" ? true : false ;
             if(!ShowOpen)
             {
-                objCategoryList=objCategoryList.Where(o => !o.Opened).ToList(); // only show closed
+                packageList = packageList.Where(o => !o.Opened).ToList(); // only show closed
             }
             if(!ShowClosed)
             {
-                objCategoryList=objCategoryList.Where(o => o.Opened).ToList();   // only show opened
+                packageList = packageList.Where(o => o.Opened).ToList();   // only show opened
             }
 
-            return View("Index",objCategoryList);
+            return View("Index", packageList);
+        }
+
+        // POST
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CreateDelivery()
+        {
+            var jsonTempDeliveries = Request.Form["json-temp-deliveries"];
+            if (!Int32.TryParse(Request.Form["package-id"],out int packageID))
+            {
+                return BadRequest();
+            }
+            if (jsonTempDeliveries.ToString() == null)
+            {
+                return NoContent();
+            }
+            var jsonDeserialized = JsonConvert.DeserializeObject<List<DeliveryDto>>(jsonTempDeliveries);
+            IEnumerable<Delivery> newDeliveries = new List<Delivery>();
+            foreach (DeliveryDto delivery in jsonDeserialized)
+            {
+                _repository.CreateDelivery(
+                    new Delivery()
+                    {
+                        CreationDateTime = DateTime.Now,
+                        Name = delivery.Name,
+                        PackageRefId = packageID,
+                        Weight=delivery.Weight
+                    }
+                    );
+                    
+            }
+            var packageFromID = _repository.GetPackage(packageID);
+            var modelView = new EditPackageContentsModelView()
+            {
+                Package = packageFromID,
+                Query = _repository.GetPackageDeliveries(packageID)
+            };
+            return View("Edit", modelView);
+
+
         }
     }
 }

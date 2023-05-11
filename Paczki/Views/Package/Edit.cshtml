@@ -1,11 +1,25 @@
-﻿@model dynamic;
+﻿@using Newtonsoft.Json;
+@model EditPackageContentsModelView;
 @{
+    int currPackageID = Model.Package.PackageId;
+    int numPackages = Enumerable.Count(Model.Query);
+    int pageSize = 5;
     ViewData["Title"] = "Edit";
+    var numPages = Math.Ceiling((double) numPackages/pageSize);
+    var currPage = 1;
+    var deliveryCount = 1;
+
+    string jsonString = JsonConvert.SerializeObject(Model.Query, Formatting.None, new JsonSerializerSettings
+            { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented, 
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+}
+@functions{
+
 }
 
 <h1>Edytowanie paczek</h1>
 <div class="w-75 btn-group" role="group">
-    <a asp-controller="Package" asp-action="Edit" asp-route-id="@Model.Package.Id">Edytuj tę paczkę</a>
+    <a asp-controller="Package" asp-action="Edit" asp-route-id="@Model.Package.PackageId">Edytuj tę paczkę</a>
 </div>
 
 <table class="table table-bordered table-striped" style="width:100%">
@@ -36,8 +50,21 @@
 
 </table>
 
+<form method="post" id="delivery-post-all" asp-action="CreateDelivery" asp-controller="Package" style="width:100%">
+    <input class="form-control" type="text" name="delivery-name" id="delivery-name" style="width:30%;display:inline-block" placeholder="Tu wpisz nazwę nowej przesyłki" />
+    <input class="form-control" type="number" step="0.01" name="delivery-weight" id="delivery-weight" style="width:25%;display:inline-block" placeholder="Tu wpisz wagę nowej przesyłki" />
+    <a class="btn btn-secondary" style="width:150px" onclick="addTemporaryDelivery()">
+        Dodaj nową przesyłkę
+    </a>
+    <input type="hidden" id="json-temp-deliveries" name="json-temp-deliveries" value="" />
+    <input type="hidden" name="package-id" value="@currPackageID" />
+    <button class="btn btn-primary" type="submit" style="width:150px">
+        Zatwierdź wszystkie
+    </button>
+</form>
+
 <h2>Lista przesyłek zarejestrowanych dla powyższej paczki:</h2>
-<table class="table table-bordered table-striped" style="width:100%">
+<table class="table table-bordered table-striped" style="width:100%" id="deliveryTable">
     <thead>
         <tr>
                 <th>Id</th>
@@ -63,9 +90,97 @@
                 @delivery.Weight
             </td>
             <td>
-                    <a asp-controller="Delivery" asp-action="Edit" asp-route-id="@delivery.Id">Edytuj</a>
+                    <a class="edit-delivery" id=@String.Format("edit-delivery-{0}",deliveryCount++)>Edytuj</a>
             </td>
         </tr>
     }
     </tbody>
 </table>
+
+@*<form method="get" asp-action="TurnPage">
+<nav aria-label="Strona">
+    <ul class="pagination">
+
+            <li class="page-item" style="cursor:pointer" onclick="decreasePageChoice()" id="page-prev"><a class="page-link">Poprzednia</a></li>
+            <li class="page-item" style="cursor:pointer" onclick="incrementPageChoice()" id="page-next"><a class="page-link">Następna</a></li>
+    </ul>
+        <label for="page-choice">Wybor strony</label>
+        <input class="form-control" id="page-choice" name="page-choice" type="text" value=@currPage />
+        <input type="hidden" name="package-id" value="@currPackageID" />
+        <button type="submit" style="cursor:pointer" class="btn btn-primary">Zatwierdz</button>
+</nav>
+</form>
+<p>10 przesylek na strone. @numPages stron do wyswietlenia.</p>*@
+@section Scripts{
+<script>
+    var _foundDeliveryCount = @(deliveryCount - 1);
+    var _deliveryCount = @deliveryCount;
+    //alert(_deliveryCount);
+    var tempDeliveries = [];
+    var _foundDeliveries = [];
+
+    var _foundDeliveriesJSON = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Query,
+        new JsonSerializerSettings{ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
+    _foundDeliveries = JSON.parse(_foundDeliveriesJSON);
+    alert(_foundDeliveries);
+
+
+    function saveTempDelivery(name, weight) {
+        tempDeliveries.push({ "name": name, "weight": weight });
+    }
+
+    function incrementPageChoice() {
+        let currPageItem = parseInt($("#page-choice").val());
+        if (currPageItem < @numPages) {
+            $("#page-choice").val(currPageItem + 1)
+        }
+
+    }
+    function decreasePageChoice() {
+        let currPageItem = parseInt($("#page-choice").val());
+        if (currPageItem > 1) {
+            $("#page-choice").val(currPageItem - 1)
+        }
+    }
+    function addTemporaryDelivery() {
+        var inputWeight = $("#delivery-weight").val();
+        var inputName = $("#delivery-name").val();
+        $("#delivery-weight").value = 0;
+        $("#delivery-name").value = 0;
+
+        var tbodyRef = document.getElementById('deliveryTable').getElementsByTagName('tbody')[0];
+        var newRow = tbodyRef.insertRow();
+
+        var newCellID = newRow.insertCell();
+        var newCellName = newRow.insertCell();
+        var newCellDate = newRow.insertCell();
+        var newCellWeight = newRow.insertCell();
+        var newCellEdition = newRow.insertCell();
+
+        var textNodeID = document.createTextNode("nowy!");
+        var textNodeName = document.createTextNode(inputName);
+        var textNodeDate = document.createTextNode("teraz!");
+        var textNodeWeight = document.createTextNode(inputWeight);
+        //var textNodeEdition = document.createTextNode("Edytuj");
+        newCellEdition.innerHTML =
+            `<a class="edit-delivery" id=edit-delivery-${_deliveryCount}>Edytuj</a>`;
+        _deliveryCount++;
+
+        newCellID.appendChild(textNodeID);
+        newCellName.appendChild(textNodeName);
+        newCellDate.appendChild(textNodeDate);
+        newCellWeight.appendChild(textNodeWeight);
+        newCellEdition.appendChild(textNodeEdition);
+
+        saveTempDelivery(inputName, inputWeight);
+            //alert(tempDeliveries.toString());
+    }
+    $("#delivery-post-all").on('submit', function () {
+        /*    debugger;*/
+        $("#json-temp-deliveries").val(JSON.stringify(tempDeliveries, ['name', 'weight']));
+        alert($("#json-temp-deliveries").val())
+        return true;
+    })
+
+</script>
+}

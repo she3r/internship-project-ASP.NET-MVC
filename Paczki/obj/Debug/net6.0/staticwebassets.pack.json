@@ -13,6 +13,10 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
+      "Id": "C:\\Users\\p.kubacki\\source\\repos\\ProjektWebconPierwszy\\Paczki\\wwwroot\\js\\editScripts.js",
+      "PackagePath": "staticwebassets\\js\\editScripts.js"
+    },
+    {
       "Id": "C:\\Users\\p.kubacki\\source\\repos\\ProjektWebconPierwszy\\Paczki\\wwwroot\\js\\site.js",
       "PackagePath": "staticwebassets\\js\\site.js"
     },

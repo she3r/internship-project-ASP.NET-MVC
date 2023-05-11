@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Paczki.Models
@@ -15,4 +17,6 @@ namespace Paczki.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal Weight { get; set; }
     }
+
+
 }
