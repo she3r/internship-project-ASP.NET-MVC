@@ -10510,19 +10510,24 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\p.kubacki\\.nuget\\packages\\": {}
+    "C:\\Users\\User\\.nuget\\packages\\": {},
+    "E:\\Windows_programy\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\p.kubacki\\source\\repos\\ProjektWebconPierwszy\\ProjektWebconPierwszy\\ProjektWebconPierwszy.csproj",
+      "projectUniqueName": "C:\\Users\\User\\Source\\Repos\\she3r\\ProjektWebconPierwszy\\ProjektWebconPierwszy\\ProjektWebconPierwszy.csproj",
       "projectName": "ProjektWebconPierwszy",
-      "projectPath": "C:\\Users\\p.kubacki\\source\\repos\\ProjektWebconPierwszy\\ProjektWebconPierwszy\\ProjektWebconPierwszy.csproj",
-      "packagesPath": "C:\\Users\\p.kubacki\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\p.kubacki\\source\\repos\\ProjektWebconPierwszy\\ProjektWebconPierwszy\\obj\\",
+      "projectPath": "C:\\Users\\User\\Source\\Repos\\she3r\\ProjektWebconPierwszy\\ProjektWebconPierwszy\\ProjektWebconPierwszy.csproj",
+      "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\User\\Source\\Repos\\she3r\\ProjektWebconPierwszy\\ProjektWebconPierwszy\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "E:\\Windows_programy\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\p.kubacki\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [

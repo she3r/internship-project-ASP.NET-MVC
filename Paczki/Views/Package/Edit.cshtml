@@ -1,4 +1,6 @@
-﻿@using Newtonsoft.Json;
+﻿@using System.Text.Json;
+@using System.Text.Json.Serialization;
+@using Newtonsoft.Json;
 @model EditPackageContentsModelView;
 @{
     int currPackageID = Model.Package.PackageId;
@@ -8,10 +10,10 @@
     var numPages = Math.Ceiling((double) numPackages/pageSize);
     var currPage = 1;
     var deliveryCount = 1;
-
-    string jsonString = JsonConvert.SerializeObject(Model.Query, Formatting.None, new JsonSerializerSettings
-            { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented, 
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+        
+    //string jsonString = JsonConvert.SerializeObject(Model.Query, Formatting.None, new JsonSerializerSettings
+    //        { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented, 
+    //            ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 }
 @functions{
 
@@ -90,13 +92,15 @@
                 @delivery.Weight
             </td>
             <td>
-                    <a class="edit-delivery" id=@String.Format("edit-delivery-{0}",deliveryCount++)>Edytuj</a>
+                    <a class="edit-delivery" id=@String.Format("edit-delivery-{0}",deliveryCount)>Edytuj</a>
+            </td>
+            <td>
+                    <a class="rm-delivery" id=@String.Format("rm-delivery-{0}",deliveryCount++)>Usuń</a>
             </td>
         </tr>
     }
     </tbody>
 </table>
-
 @*<form method="get" asp-action="TurnPage">
 <nav aria-label="Strona">
     <ul class="pagination">
@@ -112,74 +116,112 @@
 </form>
 <p>10 przesylek na strone. @numPages stron do wyswietlenia.</p>*@
 @section Scripts{
-<script>
-    var _foundDeliveryCount = @(deliveryCount - 1);
-    var _deliveryCount = @deliveryCount;
-    //alert(_deliveryCount);
+
+<script type="text/javascript">
+    var _foundDeliveryCount;
+    var _deliveryCount;
     var tempDeliveries = [];
-    var _foundDeliveries = [];
-
-    var _foundDeliveriesJSON = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.Query,
-        new JsonSerializerSettings{ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
-    _foundDeliveries = JSON.parse(_foundDeliveriesJSON);
-    alert(_foundDeliveries);
+    var _foundDeliveries;
 
 
-    function saveTempDelivery(name, weight) {
-        tempDeliveries.push({ "name": name, "weight": weight });
+        function _updateDeliveries(arr, item, id, whatModify) {
+            var index = arr.findIndex(x => x.temp_id == id);
+            if (index == -1) {
+                throw new Error('no such id!');
+            }
+            switch (whatModify) {
+                case 'Weight':
+                    arr[index]['Weight'] = parseFloat(item);
+                    break;
+                case 'Name':
+                    arr[index]['Name'] = item.toString();
+                    break;
+            }
+        }
+
+    function updateDeliveries(item,id,whatModify){
+            if(id <= _foundDeliveryCount){
+                _updateDeliveries(_foundDeliveries, item, id, whatModify);
+            }
+            else if (id < _deliveryCount){
+                _updateDeliveries(tempDeliveries, item, id, whatModify);
+            }
+            else{
+                throw new Error('requesting package with non-existing id');
+            }
+    }
+
+
+
+    function loadFoundDeliveries(){
+            _foundDeliveryCount = parseInt('@deliveryCount') - 1;
+            Object.freeze(_foundDeliveryCount);
+            _deliveryCount = parseInt('@deliveryCount');
+
+            var json = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Query, new JsonSerializerOptions(){
+            ReferenceHandler = ReferenceHandler.IgnoreCycles
+            }));
+            //alert(_deliveryCount);
+            _foundDeliveries = JSON.parse(JSON.stringify(json));
+            alert(_foundDeliveries);
+    }
+
+    function saveTempDelivery(name, weight,tempID) {
+            tempDeliveries.push({ "Name": name, "Weight": weight, "temp_id" :  tempID });
     }
 
     function incrementPageChoice() {
-        let currPageItem = parseInt($("#page-choice").val());
-        if (currPageItem < @numPages) {
-            $("#page-choice").val(currPageItem + 1)
-        }
+            let currPageItem = parseInt($("#page-choice").val());
+            if (currPageItem < @numPages) {
+                $("#page-choice").val(currPageItem + 1);
+            }
 
     }
     function decreasePageChoice() {
-        let currPageItem = parseInt($("#page-choice").val());
-        if (currPageItem > 1) {
-            $("#page-choice").val(currPageItem - 1)
-        }
+            let currPageItem = parseInt($("#page-choice").val());
+            if (currPageItem > 1) {
+                $("#page-choice").val(currPageItem - 1);
+            }
     }
     function addTemporaryDelivery() {
-        var inputWeight = $("#delivery-weight").val();
-        var inputName = $("#delivery-name").val();
-        $("#delivery-weight").value = 0;
-        $("#delivery-name").value = 0;
+            var inputWeight = $("#delivery-weight").val();
+            var inputName = $("#delivery-name").val();
+            saveTempDelivery(inputName, inputWeight, _deliveryCount);
 
-        var tbodyRef = document.getElementById('deliveryTable').getElementsByTagName('tbody')[0];
-        var newRow = tbodyRef.insertRow();
+            $("#delivery-weight").value = 0;
+            $("#delivery-name").value = 0;
 
-        var newCellID = newRow.insertCell();
-        var newCellName = newRow.insertCell();
-        var newCellDate = newRow.insertCell();
-        var newCellWeight = newRow.insertCell();
-        var newCellEdition = newRow.insertCell();
+            var tbodyRef = document.getElementById('deliveryTable').getElementsByTagName('tbody')[0];
+            var newRow = tbodyRef.insertRow();
 
-        var textNodeID = document.createTextNode("nowy!");
-        var textNodeName = document.createTextNode(inputName);
-        var textNodeDate = document.createTextNode("teraz!");
-        var textNodeWeight = document.createTextNode(inputWeight);
-        //var textNodeEdition = document.createTextNode("Edytuj");
-        newCellEdition.innerHTML =
-            `<a class="edit-delivery" id=edit-delivery-${_deliveryCount}>Edytuj</a>`;
-        _deliveryCount++;
+            var newCellID = newRow.insertCell();
+            var newCellName = newRow.insertCell();
+            var newCellDate = newRow.insertCell();
+            var newCellWeight = newRow.insertCell();
+            var newCellEdition = newRow.insertCell();
 
-        newCellID.appendChild(textNodeID);
-        newCellName.appendChild(textNodeName);
-        newCellDate.appendChild(textNodeDate);
-        newCellWeight.appendChild(textNodeWeight);
-        newCellEdition.appendChild(textNodeEdition);
+            var textNodeID = document.createTextNode(_deliveryCount.toString());
+            var textNodeName = document.createTextNode(inputName);
+            var textNodeDate = document.createTextNode("teraz!");
+            var textNodeWeight = document.createTextNode(inputWeight);
+            newCellEdition.innerHTML =
+                `<a class="edit-delivery" id=edit-delivery-${_deliveryCount}>Edytuj</a>`;
+            _deliveryCount++;
 
-        saveTempDelivery(inputName, inputWeight);
-            //alert(tempDeliveries.toString());
+            newCellID.appendChild(textNodeID);
+            newCellName.appendChild(textNodeName);
+            newCellDate.appendChild(textNodeDate);
+            newCellWeight.appendChild(textNodeWeight);
     }
+
+    $(window).on('load',function(){ 
+            loadFoundDeliveries(); 
+    });
+
     $("#delivery-post-all").on('submit', function () {
-        /*    debugger;*/
-        $("#json-temp-deliveries").val(JSON.stringify(tempDeliveries, ['name', 'weight']));
-        alert($("#json-temp-deliveries").val())
-        return true;
+            $("#json-temp-deliveries").val(JSON.stringify(tempDeliveries, ['Name', 'Weight']));
+            alert($("#json-temp-deliveries").val());
+            return true;
     })
 
 </script>

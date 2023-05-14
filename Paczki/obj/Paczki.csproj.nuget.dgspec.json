@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\p.kubacki\\source\\repos\\ProjektWebconPierwszy\\Paczki\\Paczki.csproj": {}
+    "C:\\Users\\User\\Source\\Repos\\she3r\\ProjektWebconPierwszy\\Paczki\\Paczki.csproj": {}
   },
   "projects": {
-    "C:\\Users\\p.kubacki\\source\\repos\\ProjektWebconPierwszy\\Paczki\\Paczki.csproj": {
+    "C:\\Users\\User\\Source\\Repos\\she3r\\ProjektWebconPierwszy\\Paczki\\Paczki.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\p.kubacki\\source\\repos\\ProjektWebconPierwszy\\Paczki\\Paczki.csproj",
+        "projectUniqueName": "C:\\Users\\User\\Source\\Repos\\she3r\\ProjektWebconPierwszy\\Paczki\\Paczki.csproj",
         "projectName": "Paczki",
-        "projectPath": "C:\\Users\\p.kubacki\\source\\repos\\ProjektWebconPierwszy\\Paczki\\Paczki.csproj",
-        "packagesPath": "C:\\Users\\p.kubacki\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\p.kubacki\\source\\repos\\ProjektWebconPierwszy\\Paczki\\obj\\",
+        "projectPath": "C:\\Users\\User\\Source\\Repos\\she3r\\ProjektWebconPierwszy\\Paczki\\Paczki.csproj",
+        "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\User\\Source\\Repos\\she3r\\ProjektWebconPierwszy\\Paczki\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "E:\\Windows_programy\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\p.kubacki\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -55,6 +59,12 @@
               "version": "[7.0.5, )"
             },
             "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[7.0.5, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
               "target": "Package",
               "version": "[7.0.5, )"
             },
