@@ -92,15 +92,44 @@
                 @delivery.Weight
             </td>
             <td>
-                    <a class="edit-delivery" id=@String.Format("edit-delivery-{0}",deliveryCount)>Edytuj</a>
+                    <a class="edit-delivery" style="cursor:pointer" id=@String.Format("edit-delivery-{0}",deliveryCount) data-bs-id=@String.Format("edit-delivery-{0}",deliveryCount)
+                    data-bs-toggle="modal" data-bs-target="#editModal">Edytuj</a>
             </td>
             <td>
-                    <a class="rm-delivery" id=@String.Format("rm-delivery-{0}",deliveryCount++)>Usuń</a>
+                    <a class="rm-delivery" style="cursor:pointer" id=@String.Format("rm-delivery-{0}",deliveryCount++)>Usuń</a>
             </td>
         </tr>
     }
     </tbody>
 </table>
+
+<!-- Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalID" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalID">Modyfikuj przesyłkę</h5>
+      </div>
+      <div class="modal-body">
+        <form>
+            <div class="form-group">
+                        <label for="editPackageName" class="col-form-label">Nazwa przesyłki</label>
+                <input type="text" id="editPackageName" class="form-control">
+            </div>
+            <div class="form-group">
+                        <label for="editPackageWeight" class="col-form-label">Waga przesyłki:</label>
+                        <input class="form-control" type="number" step="0.01"
+                               id="editPackageWeight" />
+            </div>
+        </form>
+     </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Zamknij</button>
+        <button type="button" id="modalSaveChanges" class="btn btn-primary">Zapisz zmiany</button>
+      </div>
+    </div>
+</div>
 @*<form method="get" asp-action="TurnPage">
 <nav aria-label="Strona">
     <ul class="pagination">
@@ -123,36 +152,32 @@
     var tempDeliveries = [];
     var _foundDeliveries;
 
+        function findDelivery(arr,id){
+            return arr.find(el => el.Id == id);
+        }
 
-        function _updateDeliveries(arr, item, id, whatModify) {
-            var index = arr.findIndex(x => x.temp_id == id);
+        function _updateDeliveries(arr, item) {
+            var id = item["Id"];
+            var index = arr.findIndex(x => x.Id == id);
             if (index == -1) {
                 throw new Error('no such id!');
             }
-            switch (whatModify) {
-                case 'Weight':
-                    arr[index]['Weight'] = parseFloat(item);
-                    break;
-                case 'Name':
-                    arr[index]['Name'] = item.toString();
-                    break;
-            }
+            arr[index] = item;
+
         }
 
-    function updateDeliveries(item,id,whatModify){
+    function updateDeliveries(item){
+            var id = parseInt(item["Id"]);
             if(id <= _foundDeliveryCount){
-                _updateDeliveries(_foundDeliveries, item, id, whatModify);
+                _updateDeliveries(_foundDeliveries, item);
             }
             else if (id < _deliveryCount){
-                _updateDeliveries(tempDeliveries, item, id, whatModify);
+                _updateDeliveries(tempDeliveries, item);
             }
             else{
                 throw new Error('requesting package with non-existing id');
             }
     }
-
-
-
     function loadFoundDeliveries(){
             _foundDeliveryCount = parseInt('@deliveryCount') - 1;
             Object.freeze(_foundDeliveryCount);
@@ -163,11 +188,11 @@
             }));
             //alert(_deliveryCount);
             _foundDeliveries = JSON.parse(JSON.stringify(json));
-            alert(_foundDeliveries);
+            //alert(_foundDeliveries);
     }
 
     function saveTempDelivery(name, weight,tempID) {
-            tempDeliveries.push({ "Name": name, "Weight": weight, "temp_id" :  tempID });
+            tempDeliveries.push({ "Name": name, "Weight": weight, "Id" :  tempID });
     }
 
     function incrementPageChoice() {
@@ -205,7 +230,8 @@
             var textNodeDate = document.createTextNode("teraz!");
             var textNodeWeight = document.createTextNode(inputWeight);
             newCellEdition.innerHTML =
-                `<a class="edit-delivery" id=edit-delivery-${_deliveryCount}>Edytuj</a>`;
+                `<a class="edit-delivery" style="cursor:pointer" id="edit-delivery-${_deliveryCount}" data-bs-id="edit-delivery-${_deliveryCount}"
+                        data-bs-toggle="modal" data-bs-target="#editModal">Edytuj</a>`;
             _deliveryCount++;
 
             newCellID.appendChild(textNodeID);
@@ -220,9 +246,30 @@
 
     $("#delivery-post-all").on('submit', function () {
             $("#json-temp-deliveries").val(JSON.stringify(tempDeliveries, ['Name', 'Weight']));
-            alert($("#json-temp-deliveries").val());
+            //alert($("#json-temp-deliveries").val());
             return true;
     })
+
+    $('#editModal').on('shown.bs.modal', function (e) {
+        var dataID = $(e.relatedTarget).attr('data-bs-id').slice(-1);
+        $("#editModalID").text(`Modyfikuj przesyłkę o id=${dataID}`);
+        var delivery;
+        if (dataID <= _foundDeliveryCount) {
+            delivery = findDelivery(_foundDeliveries,dataID);
+        }
+        else if (dataID < _deliveryCount) {
+        delivery = findDelivery(tempDeliveries,dataID);
+        }
+        $("#editPackageName").val(delivery["Name"]);
+        $("#editPackageWeight").val(delivery["Weight"]);
+    });
+
+        $("#modalSaveChanges").on('click',function(){
+            var name = $("#editPackageName").val();
+            var weight = $("#editPackageWeight").val();
+            var id = $("#editModalID").val().slice(-1);
+            updateDeliveries({ "Name": name, "Weight": weight, "Id": id });
+        })
 
 </script>
 }
