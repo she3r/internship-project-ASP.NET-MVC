@@ -1,12 +1,15 @@
 ﻿@model IEnumerable<Package>
 @{
+    int numPackages = Enumerable.Count(Model);
+    int pageSize = 5;
     ViewData["Title"] = "Index";
-
+    var numPages = Math.Ceiling((double)numPackages / pageSize);
+    var currPage = 1;
 }
 
 <h1>Okno główne – lista paczek</h1>
 
-<form method="post" asp-action="Filter" class="form-check">
+<form method="get" asp-action="FilterPackages" class="form-check">
     <input class="form-check-input" type="checkbox" value="true" id="ShowOpenCheck" name="ShowOpen" checked>
     <label class="form-check-label" for="ShowOpenCheck">
         Pokazuj otwarte
@@ -79,3 +82,37 @@
         Dodaj nową paczkę
     </button>
 </form>
+
+
+<form method="get" asp-action="TurnPage">
+<nav aria-label="strona">
+        <label for="pageChoice">wybor strony</label>
+        <input class="form-control" id="page-choice" name="pageChoice" type="number" value=@currPage style="width:2cm" />
+@*        <button type="submit" style="cursor:pointer" class="btn btn-primary">zatwierdz</button>*@
+        <div class="btn-group" role="group">
+            <button type="submit" class="btn btn-primary" style="cursor:pointer">zatwierdz</button>
+            <button type="button" class="btn btn-secondary" style="cursor:pointer" onclick="decreasePageChoice()" id="page-prev">poprzednia</button>
+            <button type="button" class="btn btn-success" style="cursor:pointer" onclick="incrementPageChoice()" id="page-next">następna</button>
+        </div>
+</nav>
+</form>
+<p>@pageSize przesylek na strone. @numPages stron do wyswietlenia.</p>
+
+@section Scripts{
+    <script type="text/javascript">
+        function incrementPageChoice() {
+            var currPageItem = parseInt($("#page-choice").val());
+            if (currPageItem < @numPages) {
+                $("#page-choice").val(currPageItem + 1)
+            }
+
+        }
+        function decreasePageChoice() {
+            var currPageItem = parseInt($("#page-choice").val());
+            if (currPageItem > 1) {
+                $("#page-choice").val(currPageItem - 1)
+            }
+        }
+
+    </script>
+}

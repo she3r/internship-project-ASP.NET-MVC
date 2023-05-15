@@ -9,6 +9,7 @@ namespace Paczki.Controllers
 {
     public class PackageController : Controller
     {
+        public int numPackagesPerPage = 5;
 
         private readonly IRepository _repository;
         public PackageController(IRepository repo)
@@ -17,7 +18,7 @@ namespace Paczki.Controllers
         }
         public IActionResult Index()
         {
-            IEnumerable<Package> packageList = _repository.GetAllPackages();
+            IEnumerable<Package> packageList = _repository.GetAllPackages().Take(numPackagesPerPage);
             return View(packageList);
         }
 
@@ -59,49 +60,30 @@ namespace Paczki.Controllers
             };
             return View(modelView);
         }
+        [HttpGet("/index")]
+        public IActionResult TurnPage(int pageChoice)
+        {
+            //int numPage = Int32.Parse(Request.Form["page-choice"]);
+            //int id = Int32.Parse(Request.Form["package-id"]);
 
-        //public IActionResult TurnPage()
-        //{
-        //    int numPage = Int32.Parse(Request.Form["page-choice"]);
-        //    int id = Int32.Parse(Request.Form["package-id"]);
-        //    if (id == null | id == 0)
-        //    {
-        //        return NotFound();
-        //    }
-        //    var packageFromID = _db.Packages.Find(id);
+            var skip = (pageChoice - 1) * numPackagesPerPage;
+            int take = numPackagesPerPage;
+            
+            var page = _repository.GetAllPackages().Skip(skip).Take(take).ToList();
+            return View("Index",page);
+        }
 
-        //    if (packageFromID == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    IEnumerable<Delivery> objDeliveryList = _db.Deliveries.Where(d => d.PackageRefId == id)
-        //        .ToList();
-
-        //    int pageSize = 10;
-        //    var skip = (numPage - 1) * pageSize;
-        //    int take = pageSize;
-
-        //    var pageOfResults = objDeliveryList.Skip(skip).Take(take).ToList();
-
-        //    var modelView = new EditPackageContentsModelView()
-        //    {
-        //        Package = packageFromID,
-        //        Query = _db.Deliveries.Where(d => d.PackageRefId == id).ToList()
-        //    };
-        //    return View(modelView);
-        //}
-
-
-        public IActionResult Filter()
+        // POST
+        public IActionResult FilterPackages(string ShowOpen, string ShowClosed)
         {
             IEnumerable<Package> packageList = _repository.GetAllPackages();
-            bool ShowOpen = Request.Form["ShowOpen"].ToString() == "true" ? true : false;
-            bool ShowClosed = Request.Form["ShowClosed"].ToString() == "true" ? true : false ;
-            if(!ShowOpen)
+            bool showOpen = ShowOpen == "true" ? true : false;
+            bool showClosed = ShowClosed == "true" ? true : false;
+            if (!showOpen)
             {
                 packageList = packageList.Where(o => !o.Opened).ToList(); // only show closed
             }
-            if(!ShowClosed)
+            if (!showClosed)
             {
                 packageList = packageList.Where(o => o.Opened).ToList();   // only show opened
             }
@@ -109,35 +91,63 @@ namespace Paczki.Controllers
             return View("Index", packageList);
         }
 
+        [HttpGet]
+        public IActionResult Filter()
+        {
+            return View();
+        }
+
+        IEnumerable<Delivery> getTempDeliveriesDeserialized(String jsonTempDeliveries, int packageID)
+        {
+
+            if (jsonTempDeliveries == null) { return Enumerable.Empty<Delivery>(); }
+            var packageFromID = _repository.GetPackage(packageID);
+            var deliveryList = new List<Delivery>();
+            var jsonTempDeliveriesDeserialized = JsonConvert.DeserializeObject<List<DeliveryDto>>(jsonTempDeliveries);
+            foreach (DeliveryDto delivery in jsonTempDeliveriesDeserialized)
+            {
+                deliveryList.Add(new Delivery()
+                {
+                    CreationDateTime = DateTime.Now,
+                    Name = delivery.Name,
+                    PackageRefId = packageID,
+                    Weight = delivery.Weight,
+                    Package = packageFromID
+                });
+
+            }
+            return deliveryList;
+        }
+
+        IEnumerable<DeliveryDtoWithId> getStaticModifiedDeliveriesDeserialized(String jsonStaticModifiedDeliveries, int packageID)
+        {
+            if (jsonStaticModifiedDeliveries == null) { return Enumerable.Empty<DeliveryDtoWithId>(); }
+            var jsonStaticModifiedDeliveriesDeserialized = JsonConvert.DeserializeObject<List<DeliveryDtoWithId>>(jsonStaticModifiedDeliveries);
+            return jsonStaticModifiedDeliveriesDeserialized;
+        }
+
         // POST
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreateDelivery()
+        public IActionResult HandleEditDeliveries()
         {
+            
             var jsonTempDeliveries = Request.Form["json-temp-deliveries"];
+            var jsonStaticDeliveriesModified = Request.Form["json-static-deliveries-modified"];
+            JsonConvert.DeserializeObject<List<DeliveryDto>>(jsonTempDeliveries);
+            var jsonStaticDeliveriesToDelete = JsonConvert.DeserializeObject<List<int>>(Request.Form["json-static-deliveries-to-delete"]);
             if (!Int32.TryParse(Request.Form["package-id"],out int packageID))
             {
                 return BadRequest();
             }
-            if (jsonTempDeliveries.ToString() == null)
+            if (jsonTempDeliveries.ToString() == null && jsonStaticDeliveriesModified.ToString() == null)
             {
                 return NoContent();
             }
-            var jsonDeserialized = JsonConvert.DeserializeObject<List<DeliveryDto>>(jsonTempDeliveries);
-            IEnumerable<Delivery> newDeliveries = new List<Delivery>();
-            foreach (DeliveryDto delivery in jsonDeserialized)
-            {
-                _repository.CreateDelivery(
-                    new Delivery()
-                    {
-                        CreationDateTime = DateTime.Now,
-                        Name = delivery.Name,
-                        PackageRefId = packageID,
-                        Weight=delivery.Weight
-                    }
-                    );
-                    
-            }
+            _repository.CreateDeliveries(getTempDeliveriesDeserialized(jsonTempDeliveries, packageID));
+            _repository.UpdateDeliveries(getStaticModifiedDeliveriesDeserialized(jsonStaticDeliveriesModified, packageID));
+            _repository.DeleteDeliveries(jsonStaticDeliveriesToDelete);
+
             var packageFromID = _repository.GetPackage(packageID);
             var modelView = new EditPackageContentsModelView()
             {

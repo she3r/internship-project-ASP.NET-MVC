@@ -1,6 +1,7 @@
 using Paczki;
 using Microsoft.EntityFrameworkCore;
 using Paczki.Repositories;
+using System.Security.Policy;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,5 +33,9 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+//app.MapControllerRoute(
+//    name: "packageFilter",
+//    pattern: "package/FilterPackages/{showOpened}/{"
+//    )
 
 app.Run();
