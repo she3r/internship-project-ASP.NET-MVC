@@ -20,18 +20,18 @@
 @functions{
     int getMaxId()
     {
-        int? maxId = Model.Query.MaxBy(item => item.Id).Id;
+        var maxId = Model.Query.MaxBy(item => item.Id);
         if(maxId is null)
         {
-            maxId = 0;
+            return 0;
         }
-        return (int) maxId;
+        return (int) maxId.Id;
     }
 }
 
 <h1>Edytowanie paczek</h1>
 <div class="w-75 btn-group" role="group">
-    <a asp-controller="Package" asp-action="Edit" asp-route-id="@Model.Package.PackageId">Edytuj tę paczkę</a>
+    <a asp-controller="Package" asp-action="EditPackageOnly" asp-route-id="@Model.Package.PackageId">Edytuj tę paczkę</a>
 </div>
 
 <table class="table table-bordered table-striped" style="width:100%">
@@ -283,7 +283,11 @@
             //alert(JSON.stringify(modifiedFoundDeliveries), ['Name','Weight','Id']);
             //return false;
             return true;
-    })
+    });
+
+    function findDelivery(arr,id){
+        return arr.find(element => element.Id == id);
+    }
 
     $('#deliveryTable').delegate(".edit-delivery", "click", function () {
         $("#delivery-modify").show();

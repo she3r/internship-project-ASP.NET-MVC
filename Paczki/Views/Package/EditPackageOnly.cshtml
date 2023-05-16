@@ -1,0 +1,23 @@
+﻿@model Package;
+@{
+    ViewData["Title"] = "EditPackageOnly";
+    string dc = Model.DestinationCity == null ? "" : Model.DestinationCity;
+    string name = Model.Name;
+
+}
+
+<form method="post" asp-action="EditPackageOnly">
+    <label class="form-check-label" for="packageName">
+        Nazwa paczki
+    </label>
+    <input type="hidden" name="id" value=@Model.PackageId />
+    <input class="form-control" type="text" name="packageName" placeholder=@name />
+    <label class="form-check-label" for="packageCity">
+        Miejscowosc docelowa
+    </label>
+    <input class="form-control" type="text" name="packageCity" placeholder=@dc />
+    <button type="submit" class="btn btn-secondary" style="width:150px">
+        Aktualizuj paczke
+    </button>
+</form>
+

@@ -12,10 +12,18 @@ namespace Paczki.Repositories
         bool CreatePackage(Package package);
         bool CreateDelivery(Delivery delivery);
         bool CreateDeliveries(IEnumerable<Delivery> deliveryList);
+        bool UpdatePackage(PackageDtoWithId packageDto);
         bool UpdateDelivery(DeliveryDtoWithId delivery);
         bool UpdateDeliveries(IEnumerable<DeliveryDtoWithId> deliveryList);
+        bool DeletePackage(int? id);
         bool DeleteDelivery(int? id);
         bool DeleteDeliveries(IEnumerable<int> ids);
+
+        int getNumOfPackages();
+        int getNumOfDeliveries();
+        int getNumOfDeliveries(int? id);
+
+        int getPackagePosition(int? id);
 
 
 

@@ -1,21 +1,27 @@
-﻿@model IEnumerable<Package>
+﻿@model IndexPackageContentsModelView
 @{
-    int numPackages = Enumerable.Count(Model);
-    int pageSize = 5;
+    int numPackages = Model.NumOfAllPackages;
+    int pageSize = Model.NumPackagesOnPage;
     ViewData["Title"] = "Index";
     var numPages = Math.Ceiling((double)numPackages / pageSize);
-    var currPage = 1;
+    var currPage = Model.PageChoice;
+}
+
+@if (TempData["edit_operation"] != null)
+{
+    <h2>@TempData["edit_operation"]</h2>
 }
 
 <h1>Okno główne – lista paczek</h1>
 
 <form method="get" asp-action="FilterPackages" class="form-check">
-    <input class="form-check-input" type="checkbox" value="true" id="ShowOpenCheck" name="ShowOpen" checked>
+    <input class="page-choice-input" name="pageChoice" type="hidden" value=@currPage />
+    <input class="form-check-input show-opened-input" type="checkbox" value="true" id="ShowOpenCheck" name="ShowOpen" checked>
     <label class="form-check-label" for="ShowOpenCheck">
         Pokazuj otwarte
     </label>
     <br />
-    <input class="form-check-input" type="checkbox" value="true" id="ShowClosedCheck" name="ShowClosed" checked>
+    <input class="form-check-input show-closed-input" type="checkbox" value="true" id="ShowClosedCheck" name="ShowClosed" checked>
     <label class="form-check-label" for="ShowClosedCheck">
         Pokazuj zamknięte
     </label>
@@ -38,13 +44,14 @@
             <th>Miasto docelowe</th>
             <th></th>
             <th></th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var package in Model)
+        @foreach (var package in Model.Query)
         {
             <tr>
-                <td width="30%">
+                <td width="20%">
                     @package.Name
                 </td>
                 <td width="20%">
@@ -53,7 +60,7 @@
                 <td width="20%">
                     @package.ClosedDateTime
                 </td>
-                <td width="5%">
+                <td width="5%" class="openedInfo">
                     @package.Opened
                 </td>
                 <td width="10%">
@@ -61,13 +68,22 @@
                     </td>
                 <td width="5%">
                     <div class="w-75 btn-group" role="group">
-                        <a asp-controller="Package" asp-action="Edit" asp-route-id="@package.PackageId">Edit</a>
+                        <a asp-controller="Package" asp-action="Edit" asp-route-id="@package.PackageId">Edytuj</a>
                     </div>
                 </td>
-
                 <td width="5%">
                     <div class="w-75 btn-group" role="group">
-                        <a asp-controller="Package" asp-action="Remove" asp-route-id="@package.PackageId">Remove</a>
+                        <a asp-controller="Package" id="open-button" asp-action="Open" asp-route-id="@package.PackageId">Otwórz</a>
+                    </div>
+                </td>
+                <td width="5%">
+                    <div class="w-75 btn-group" role="group">
+                        <a asp-controller="Package" id="close-button" asp-action="Close" asp-route-id="@package.PackageId">Zamknij</a>
+                    </div>
+                </td>
+                <td width="5%">
+                    <div class="w-75 btn-group" role="group">
+                        <a asp-controller="Package" asp-action="Delete" asp-route-id="@package.PackageId">Usuń</a>
                     </div>
                 </td>
             </tr>
@@ -87,13 +103,15 @@
 <form method="get" asp-action="TurnPage">
 <nav aria-label="strona">
         <label for="pageChoice">wybor strony</label>
-        <input class="form-control" id="page-choice" name="pageChoice" type="number" value=@currPage style="width:2cm" />
+        <input class="form-control page-choice-input" id="page-choice" name="pageChoice" type="number" value=@currPage style="width:2cm" />
 @*        <button type="submit" style="cursor:pointer" class="btn btn-primary">zatwierdz</button>*@
         <div class="btn-group" role="group">
             <button type="submit" class="btn btn-primary" style="cursor:pointer">zatwierdz</button>
             <button type="button" class="btn btn-secondary" style="cursor:pointer" onclick="decreasePageChoice()" id="page-prev">poprzednia</button>
             <button type="button" class="btn btn-success" style="cursor:pointer" onclick="incrementPageChoice()" id="page-next">następna</button>
         </div>
+        <input type="hidden" class="show-closed-input" value=@Model.ShowClosed.ToString() name="ShowClosed" checked>
+        <input type="hidden" class="show-opened-input" value=@Model.ShowOpen.ToString() name="ShowOpen" checked>
 </nav>
 </form>
 <p>@pageSize przesylek na strone. @numPages stron do wyswietlenia.</p>
@@ -102,17 +120,45 @@
     <script type="text/javascript">
         function incrementPageChoice() {
             var currPageItem = parseInt($("#page-choice").val());
-            if (currPageItem < @numPages) {
-                $("#page-choice").val(currPageItem + 1)
+            var numPages = @numPages;
+            if (currPageItem < numPages) {
+                $("#page-choice").val(currPageItem + 1);
             }
 
         }
         function decreasePageChoice() {
             var currPageItem = parseInt($("#page-choice").val());
             if (currPageItem > 1) {
-                $("#page-choice").val(currPageItem - 1)
+                $("#page-choice").val(currPageItem - 1);
             }
         }
+
+        $(".show-opened-input").change(function(){
+            var value = $(this).val();
+            $(".show-opened-input").val(value);
+        });
+        $(".show-closed-input").change(function () {
+            var value = $(this).val();
+            $(".show-closed-input").val(value);
+        });
+        $(".page-choice-input").change(function () {
+            var value = $(this).val();
+            $(".show-closed-input").val(value);
+        });
+
+        $(document).delegate("#open-button","click",function(){
+            var isOpened = $("#open-button").closest("tr").find(".openedInfo").text();
+            isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
+            alert(isOpened);
+            return (isOpened != 'True');
+        });
+
+        $(document).delegate("#close-button", "click", function () {
+            var isOpened = $("#close-button").closest("tr").find(".openedInfo").text();
+            isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
+            alert(isOpened);
+            return (isOpened == 'True');
+        });
 
     </script>
 }
