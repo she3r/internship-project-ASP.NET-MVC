@@ -195,6 +195,8 @@
         var newPackages = [];    // Name: , DestinationCity:
         //var hiddenPackages = [];
         var hiddenIDCount = @(maxID + 1);
+        const numToHide = 5;
+        var hiddenEntities = 0;
 
         $(window).on('load', function () {
             $("#PageChoice").attr("min", 1);
@@ -231,14 +233,20 @@
         }
 
         function hideLastRowInTable(){
-            var numToHide = 5;
+            hiddenEntities++;
             $(`#packages-table tr:nth-child(${numToHide})`).hide();
         }
 
-        function pushNewPackageToTable(){
-            hideLastRowInTable();
-            appendNewRowToTable();
+        function unhideLastRowInTable(){
+            $(`#packages-table tr:nth-child(${numToHide})`).show();
+        }
 
+        function pushNewPackageToTable(){
+            var currNumOfRowsOnPage = @Model.Query.Count() + newPackages.length;
+            if(currNumOfRowsOnPage > 5){
+                hideLastRowInTable();
+            }
+            appendNewRowToTable();
         }
         
         function incrementPageChoice() {
