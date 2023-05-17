@@ -99,8 +99,11 @@ namespace Paczki.Controllers
                 return RedirectToAction("Index");
             }
 
-            var modelView = new EditPackageContentsModelView() { Package = packageFromID,
-                Query = _repository.GetPackageDeliveries(id)
+            var modelView = new EditPackageContentsModelView() {
+                PackageId = (int) id,
+                Package = packageFromID,
+                Query = _repository.GetPackageDeliveries(id),
+
             };
             return View(modelView);
         }
@@ -263,63 +266,91 @@ namespace Paczki.Controllers
             return RedirectToAction("Index");
         }
 
-        private IEnumerable<Delivery> _getTempDeliveriesDeserialized(String jsonTempDeliveries, int packageID)
+        private IEnumerable<Delivery> GetTempDeliveriesDeserialized(String jsonTempDeliveries, int packageID)
         {
 
             if (jsonTempDeliveries == null) { return Enumerable.Empty<Delivery>(); }
             var packageFromID = _repository.GetPackage(packageID);
             var deliveryList = new List<Delivery>();
             var jsonTempDeliveriesDeserialized = JsonConvert.DeserializeObject<List<DeliveryDto>>(jsonTempDeliveries);
-            foreach (DeliveryDto delivery in jsonTempDeliveriesDeserialized)
+            if (jsonTempDeliveriesDeserialized != null)
             {
-                deliveryList.Add(new Delivery()
+                foreach (DeliveryDto delivery in jsonTempDeliveriesDeserialized)
                 {
-                    CreationDateTime = DateTime.Now,
-                    Name = delivery.Name,
-                    PackageRefId = packageID,
-                    Weight = delivery.Weight,
-                    Package = packageFromID
-                });
+                    deliveryList.Add(new Delivery()
+                    {
+                        CreationDateTime = DateTime.Now,
+                        Name = delivery.Name,
+                        PackageRefId = packageID,
+                        Weight = delivery.Weight,
+                        Package = packageFromID
+                    });
 
+                }
             }
             return deliveryList;
         }
 
-        private IEnumerable<DeliveryDtoWithId> _getStaticModifiedDeliveriesDeserialized(String jsonStaticModifiedDeliveries, int packageID)
+        private IEnumerable<DeliveryDtoWithId> GetStaticModifiedDeliveriesDeserialized(String jsonStaticModifiedDeliveries, int packageID)
         {
             if (jsonStaticModifiedDeliveries == null) { return Enumerable.Empty<DeliveryDtoWithId>(); }
             var jsonStaticModifiedDeliveriesDeserialized = JsonConvert.DeserializeObject<List<DeliveryDtoWithId>>(jsonStaticModifiedDeliveries);
             return jsonStaticModifiedDeliveriesDeserialized;
         }
 
+        IEnumerable<int> GetStaticDeliveriesToDelete(string jsonStaticDeliveriesToDelete)
+        {
+            var deserialized = new List<int>();
+            if (jsonStaticDeliveriesToDelete != null)
+            {
+                deserialized = JsonConvert.DeserializeObject<List<int>>(jsonStaticDeliveriesToDelete);
+            }
+            return deserialized;
+        }
+
         // POST
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult HandleEditDeliveries()
+        public IActionResult HandleEditDeliveries(EditPackageContentsModelView modelView)
         {
-            
-            var jsonTempDeliveries = Request.Form["json-temp-deliveries"];
-            var jsonStaticDeliveriesModified = Request.Form["json-static-deliveries-modified"];
-            JsonConvert.DeserializeObject<List<DeliveryDto>>(jsonTempDeliveries);
-            var jsonStaticDeliveriesToDelete = JsonConvert.DeserializeObject<List<int>>(Request.Form["json-static-deliveries-to-delete"]);
-            if (!Int32.TryParse(Request.Form["package-id"],out int packageID))
+            var packageID = modelView.PackageId;
+            if (packageID <= 0)
             {
                 return BadRequest();
             }
-            if (jsonTempDeliveries.ToString() == null && jsonStaticDeliveriesModified.ToString() == null)
+            var jsonTempDeliveries = modelView.JsonTempDeliveries;
+            var jsonStaticDeliveriesModified = modelView.JsonStaticDeliveriesModified;
+            var jsonStaticDeliveriesToDelete = modelView.JsonStaticDeliveriesToDelete;
+            PackageDtoWithId packageDtoWithId = new PackageDtoWithId()
             {
-                return NoContent();
-            }
-            _repository.CreateDeliveries(_getTempDeliveriesDeserialized(jsonTempDeliveries, packageID));
-            _repository.UpdateDeliveries(_getStaticModifiedDeliveriesDeserialized(jsonStaticDeliveriesModified, packageID));
-            _repository.DeleteDeliveries(jsonStaticDeliveriesToDelete);
-
-            var packageFromID = _repository.GetPackage(packageID);
-            var modelView = new EditPackageContentsModelView()
-            {
-                Package = packageFromID,
-                Query = _repository.GetPackageDeliveries(packageID)
+                Id = packageID,
+                Name = modelView.NewPackageName,
+                DestinationCity = modelView.NewPackageCity
             };
+
+            var toCreateDeliveries = GetTempDeliveriesDeserialized(jsonTempDeliveries, packageID);
+            if (toCreateDeliveries != null) {
+                _repository.CreateDeliveries(GetTempDeliveriesDeserialized(jsonTempDeliveries, packageID));
+            }
+            var toUpdateDeliveries = GetStaticModifiedDeliveriesDeserialized(jsonStaticDeliveriesModified, packageID);
+            if (toUpdateDeliveries != null)
+            {
+                _repository.UpdateDeliveries(toUpdateDeliveries);
+            }
+            var toDeleteDeliveries = GetStaticDeliveriesToDelete(jsonStaticDeliveriesToDelete);
+            if (toDeleteDeliveries != null)
+            {
+                _repository.DeleteDeliveries(toDeleteDeliveries);
+            }
+            _repository.UpdatePackage(packageDtoWithId);
+            modelView.Query = _repository.GetPackageDeliveries(packageID);
+            modelView.JsonStaticDeliveriesToDelete = "";
+            modelView.JsonStaticDeliveriesModified = "";
+            modelView.JsonTempDeliveries = "";
+            modelView.NewPackageCity = "";
+            modelView.NewPackageName = "";
+            modelView.Package = _repository.GetPackage(packageID);
+    
             return View("Edit", modelView);
 
 

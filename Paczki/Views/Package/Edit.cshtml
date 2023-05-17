@@ -20,7 +20,8 @@
         return (int) maxId.Id;
     }
 }
-<form id="delivery-post-all" style="width:100%">
+@using(Html.BeginForm()){
+@*    @Html.HiddenFor(model => model.IsOpened, new{})*@
 <!-- Modal -->
 <div class="modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -32,19 +33,19 @@
                 <div class="form-group">
                     @*                        <label for="newPackageName" class="col-form-label">Nazwa paczki:</label>
                     <input type="text" class="form-control" id="newPackageName">*@
-                    @Html.LabelFor(model => model.NewPackageName,"Nazwa paczki:")
+                        @Html.LabelFor(model => model.NewPackageName,"Nazwa paczki: ",new{style="width:150px"})
                     @Html.EditorFor(model => model.NewPackageName)
                 </div>
                 <div class="form-group">
                     @*                        <label for="newPackageCity" class="col-form-label">Miejscowość docelowa:</label>
                     <input type="text" class="form-control" id="newPackageCity">*@
-                    @Html.LabelFor(model => model.NewPackageCity,"Miasto docelowe:")
+                        @Html.LabelFor(model => model.NewPackageCity,"Miasto docelowe: ",new{style="width:150px"})
                     @Html.EditorFor(model => model.NewPackageCity)
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <button type="submit" formmethod="post" asp-action="EditPackageOnly" class="btn btn-primary">Utwórz paczkę</button>
+                <button type="button" onclick="updateTempPackage()" class="btn btn-primary">Zatwierdź</button>
             </div>
         </div>
     </div>
@@ -63,7 +64,7 @@
     </tr>
     <tr>
         <th>Nazwa</th>
-        <td>@Model.Package.Name</td>
+        <td id="curr-name">@Model.Package.Name</td>
     </tr>
     <tr>
         <th>Opened</th>
@@ -79,7 +80,7 @@
     </tr>
     <tr>
         <th>DestinationCity</th>
-        <td>@Model.Package.DestinationCity</td>
+        <td id="curr-city">@Model.Package.DestinationCity</td>
     </tr>
 
 </table>
@@ -98,10 +99,10 @@
     @Html.HiddenFor(model => model.JsonStaticDeliveriesToDelete, new{id="json-static-deliveries-to-delete"})
    @* <input type="hidden" name="package-id" value="@currPackageID" />*@
     @Html.HiddenFor(model => model.PackageId, new{value=Model.PackageId})
-    <button class="btn btn-primary" type="submit" asp-action="HandleEditDeliveries" asp-controller="Package" style="width:150px">
-        Zatwierdź wszystkie
+    <button class="btn btn-primary float-end" type="submit" formmethod="post" id="submit-all-button" asp-action="HandleEditDeliveries" asp-controller="Package" style="width:200px">
+        Zatwierdź wszystkie zmiany
     </button>
-</form>
+
 
 <h2>Lista przesyłek zarejestrowanych dla powyższej paczki:</h2>
 <table class="table table-bordered table-striped" style="width:100%" id="deliveryTable">
@@ -140,7 +141,7 @@
     </tbody>
 </table>
 
-<form action="javascript:void(0);" id="delivery-modify" style="width:100%; display:none">
+@*<form action="javascript:void(0);" id="delivery-modify" style="width:100%; display:none">
     <input class="form-control" type="text" id="edit-delivery-name" style="width:30%;display:inline-block" />
     <input class="form-control" type="number" step="0.01" id="edit-delivery-weight" style="width:25%;display:inline-block"/>
     <input type="hidden" id="edit-delivery-id" value="" />
@@ -149,8 +150,8 @@
     </button>
     <button class="btn btn-primary" style="width:150px" id="edit-delivery-decline">
         Anuluj
-    </button>
-</form>
+    </button>*@
+}
 
 @section Scripts{
 
@@ -163,6 +164,7 @@
     var toRemoveFoundDeliveriesIds = [];
     var currPackageName;
     var currPackageCity;
+
 
     class Delivery{
         constructor(name,weight,id) 
@@ -227,6 +229,25 @@
         arr[index].Name = item.Name;
         arr[index].Weight = item.Weight;
 
+    }
+    function updateTempPackage(){
+        var formName = $("#NewPackageName").val();
+        var formCity = $("#NewPackageCity").val();
+         $("#NewPackageName").val("");
+         $("#NewPackageCity").val("");
+        if(formName != ""){
+            currPackageName = formName;
+                $("#curr-name").html(currPackageName);
+
+        }
+        if(formCity != ""){
+            currPackageCity = formCity;
+                $("#curr-city").html(currPackageCity);
+        }
+        updateEditModal();
+        $("#exampleModal").modal("hide");
+        
+        return false;   // bez submitu
     }
 
     function updateDeliveries(item){
@@ -294,6 +315,7 @@
             loadFoundDeliveries();
             currPackageName = '@Model.Package.Name';
             currPackageCity = '@Model.Package.DestinationCity';
+            currPackageData = { "Name": '@Model.Package.Name', "City": '@Model.Package.DestinationCity' };         
             updateEditModal();
     });
 
@@ -322,12 +344,12 @@
 
     });
 
-        $('#deliveryTable').delegate(".delete-delivery", "click", function(){
-            var deliveryId = parseInt($(this).data("id"));
-            removeDeliveryFromArray(deliveryId);
-            $(this).parent().parent().remove();
+    $('#deliveryTable').delegate(".delete-delivery", "click", function(){
+        var deliveryId = parseInt($(this).data("id"));
+        removeDeliveryFromArray(deliveryId);
+        $(this).parent().parent().remove();
 
-        });
+    });
 
     $("#delivery-modify").on("submit", function(){
         var modifiedName = $("#edit-delivery-name").val();
@@ -342,7 +364,14 @@
         $("#edit-delivery-weight").val("");
         $("#delivery-modify").css("display","none");
         return false;   // nie chcemy submitowac, wszystko w jsie jest robione
-    })
+    });
+
+    $("#submit-all-button").on("submit", function(){
+        $("#NewPackageName").val(currPackageName);
+        $("#NewPackageCity").val(currPackageCity);
+        return true;
+    });
+
 
 </script>
 }

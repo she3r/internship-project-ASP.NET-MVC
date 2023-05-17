@@ -5,7 +5,22 @@
     ViewData["Title"] = "Index";
     var numPages = Math.Ceiling((double)numPackages / pageSize);
     var currPage = Model.PageChoice;
+    var maxID = getMaxId();
+
 }
+
+@functions {
+    int getMaxId()
+    {
+        var maxId = Model.Query.MaxBy(item => item.PackageId);
+        if (maxId is null)
+        {
+            return 0;
+        }
+        return (int)maxId.PackageId;
+    }
+}
+
 
 @if (TempData["edit_operation"] != null)
 {
@@ -35,9 +50,13 @@
         Pokazuj zamknięte
     </label>
     <br/>*@
-    <button class="btn btn-primary" style="width:150px" formmethod="get" asp-action="FilterPackages" >Filtruj</button>
-
-    <table class="table table-bordered table-striped" style="width:100%">
+    <div class="p-2">
+        <button class="btn btn-primary float-start" style="width:150px" formmethod="get" asp-action="FilterPackages" >Filtruj</button>
+        <button class="btn btn-secondary float-end" style="width:300px" formmethod="post" asp-action="HandleEditPackages">Zatwierdź wszystkie zmiany</button>
+        <br />
+    </div>
+    <br/><br/>
+    <table id="packages-table" class="table table-bordered table-striped" style="width:100%">
 
         <thead>
             <tr>
@@ -72,17 +91,17 @@
                         </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a asp-controller="Package" asp-action="Edit" asp-route-id="@package.PackageId">Edytuj</a>
+                            <a asp-controller="Package" class="edit-button" asp-action="Edit" asp-route-id="@package.PackageId">Edytuj</a>
                         </div>
                     </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a asp-controller="Package" id="open-button" asp-action="Open" asp-route-id="@package.PackageId">Otwórz</a>
+                            <a asp-controller="Package" class="open-button" asp-action="Open" asp-route-id="@package.PackageId">Otwórz</a>
                         </div>
                     </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a asp-controller="Package" id="close-button" asp-action="Close" asp-route-id="@package.PackageId">Zamknij</a>
+                            <a asp-controller="Package" class="close-button" asp-action="Close" asp-route-id="@package.PackageId">Zamknij</a>
                         </div>
                     </td>
                     <td width="5%">
@@ -115,19 +134,19 @@
                     <div class="form-group">
 @*                        <label for="newPackageName" class="col-form-label">Nazwa paczki:</label>
                         <input type="text" class="form-control" id="newPackageName">*@
-                        @Html.LabelFor(model => model.NewPackageName,"Nazwa paczki:")
+                        @Html.LabelFor(model => model.NewPackageName,"Nazwa paczki:",new{style="width:150px"})
                         @Html.EditorFor(model => model.NewPackageName)
                     </div>
                     <div class="form-group">
 @*                        <label for="newPackageCity" class="col-form-label">Miejscowość docelowa:</label>
                         <input type="text" class="form-control" id="newPackageCity">*@
-                        @Html.LabelFor(model => model.NewPackageCity,"Miasto docelowe:")
+                        @Html.LabelFor(model => model.NewPackageCity,"Miasto docelowe:",new{style="width:150px"})
                         @Html.EditorFor(model => model.NewPackageCity)
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                    <button type="submit" formmethod="post" asp-action="CreatePackage" class="btn btn-primary">Utwórz paczkę</button>
+                    <button type="submit" formmethod="post" id="addPackageCandidate" asp-action="CreatePackage" class="btn btn-primary">Utwórz paczkę</button>
                 </div>
             </div>
         </div>
@@ -136,31 +155,92 @@
 
 
 
-@*<form method="get" asp-action="TurnPage">*@
-<nav aria-label="strona">
-@*        <label for="pageChoice">wybor strony</label>*@
-        @Html.LabelFor(model => model.PageChoice,"wybór strony");
-        @Html.EditorFor(model => model.PageChoice, new {@class = "form-control page-choice-input", style="width:2cm", min="1"});
+    <p id="vertical-space"></p>
+    <p id="vertical-space"></p>
+    <p id="vertical-space"></p>
+    <p id="vertical-space"></p>
+    <p id="vertical-space"></p>
+    <p id="vertical-space"></p>
+    <p id="vertical-space"></p>
+    <p id="vertical-space"></p>
+    <p id="vertical-space"></p>
+<div>
+    @Html.LabelFor(model => model.PageChoice,"wybór strony")
+    @Html.EditorFor(model => model.PageChoice, new {@class = "form-control page-choice-input", style="width:0.5cm", min="1"})
+@*    <p id="vertical-space"></p>*@
 @*        <input class="form-control page-choice-input" id="page-choice" name="pageChoice" type="number" value=@currPage style="width:2cm" />*@
 @*        <button type="submit" style="cursor:pointer" class="btn btn-primary">zatwierdz</button>*@
-        <div class="btn-group" role="group">
-            <button type="submit" formmethod="get" asp-action="TurnPage" class="btn btn-primary" style="cursor:pointer">zatwierdź stronę</button>
-            <button type="button" class="btn btn-secondary" style="cursor:pointer" onclick="decreasePageChoice()" id="page-prev">poprzednia</button>
-            <button type="button" class="btn btn-success" style="cursor:pointer" onclick="incrementPageChoice()" id="page-next">następna</button>
-        </div>
+    <br/><br/>
+    <div class="btn-group" role="group">
+        <button type="submit" formmethod="get" asp-action="TurnPage" class="btn btn-primary" style="cursor:pointer">zatwierdź stronę</button>
+        <button type="button" class="btn btn-secondary" style="cursor:pointer" onclick="decreasePageChoice()" id="page-prev">poprzednia</button>
+        <button type="button" class="btn btn-success" style="cursor:pointer" onclick="incrementPageChoice()" id="page-next">następna</button>
+    </div>
 @*        <input type="hidden" class="show-closed-input" value=@Model.ShowClosed.ToString() name="ShowClosed" checked>
-        <input type="hidden" class="show-opened-input" value=@Model.ShowOpen.ToString() name="ShowOpen" checked>*@
-</nav>
-@*</form>*@
+    <input type="hidden" class="show-opened-input" value=@Model.ShowOpen.ToString() name="ShowOpen" checked>*@
+</div>
+
 }
 <p>@pageSize przesylek na strone. @numPages stron do wyswietlenia.</p>
 
 @section Scripts{
     <script type="text/javascript">
+        class Package {
+            constructor(name, city, tempID) {
+                this.Name = name;
+                this.City = city;
+                this.TempId = tempID;
+            }
+        }
+        var newPackages = [];    // Name: , DestinationCity:
+        //var hiddenPackages = [];
+        var hiddenIDCount = @(maxID + 1);
+
         $(window).on('load', function () {
-            $("#PageChoice").attr("min",1);
+            $("#PageChoice").attr("min", 1);
+            
+        });
+        $("#addPackageCandidate").on("click", function(){
+            if(newPackages.length >= 5){
+                alert("Nie można dodać więcej niż 5 paczek bez zapisywania.");
+                return false;
+            }
+            var candidateName = $("#NewPackageName").val();
+            var candidateCity = $("#NewPackageCity").val();
+            newPackages.push(new Package(candidateName, candidateCity, hiddenIDCount));
+            hiddenIDCount++;
+            pushNewPackageToTable();
         });
 
+        function appendNewRowToTable(){
+            var newRow = newPackages.slice(-1);
+            row = $(`<tr class='temp-package' id=${newRow.TempId}></tr>`);
+            nameCol = $(`<td>${newRow.Name}</td>`);
+            dateBornCol = $("<td><strong>teraz!</strong></td>");
+            dateClosedCol = $("<td></td>");
+            isOpenedCol = $("<td></td>");
+            cityCol = $("<td></td>");
+            editCol = $(String.raw`<td><a href="#" onclick="alertNotSaved()">Edytuj</a></td>`);
+            openCol = $(String.raw`<td><a href="#" onclick="alertNotSaved()">Otwórz</a></td>`);
+            closeCol = $(String.raw`<td><a href="#" onclick="alertNotSaved()">Zamknij</a></td>`);
+            row.append(nameCol, dateBornCol, dateClosedCol, isOpenedCol, cityCol, editCol,openCol,closeCol).prependTo("#packages-table");
+        }
+
+        function alertNotSaved(){
+            alert("Zapisz wszystko aby dokonywać operacji na paczkach")
+        }
+
+        function hideLastRowInTable(){
+            var numToHide = 5;
+            $(`#packages-table tr:nth-child(${numToHide})`).hide();
+        }
+
+        function pushNewPackageToTable(){
+            hideLastRowInTable();
+            appendNewRowToTable();
+
+        }
+        
         function incrementPageChoice() {
             var currPageItem = parseInt($("#PageChoice").val());
             var numPages = @numPages;
@@ -189,18 +269,31 @@
             $(".show-closed-input").val(value);
         });
 
-        $(document).delegate("#open-button","click",function(){
-            var isOpened = $("#open-button").closest("tr").find(".openedInfo").text();
+
+        $(document).delegate(".open-button","click",function(){
+            var isOpened = $(this).closest("tr").find(".openedInfo").text();
             isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
-            alert(isOpened);
+            //alert(isOpened);
             return (isOpened != 'True');
         });
 
-        $(document).delegate("#close-button", "click", function () {
-            var isOpened = $("#close-button").closest("tr").find(".openedInfo").text();
+        $(document).delegate(".close-button", "click", function () {
+            var isOpened = $(this).closest("tr").find(".openedInfo").text();
             isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
-            alert(isOpened);
+            //alert(isOpened);
             return (isOpened == 'True');
+        });
+
+        $(document).delegate(".edit-button", "click", function(){
+            var isOpened = $(this).closest("tr").find(".openedInfo").text();
+            isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
+            isOpened = (isOpened == 'True');
+            if(!isOpened){
+                alert("Nie można edytować zamkniętej paczki.");
+                $(this).addClass('disabled');
+                return false;
+            }
+            return true;
         });
 
     </script>

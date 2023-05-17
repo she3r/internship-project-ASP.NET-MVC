@@ -16,3 +16,15 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+#vertical-space {
+    margin-bottom: 3cm;
+    color: blue;
+    font-style: italic;
+}
+
+a.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: default;
+}
