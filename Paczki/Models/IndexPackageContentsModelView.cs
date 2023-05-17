@@ -8,5 +8,9 @@
         public int PageChoice { get; set; } = 1;
         public int NumOfAllPackages { get; set; }
         public int NumPackagesOnPage { get;set; }
+
+        public string? NewPackageName { get; set; } = null;
+        public string? NewPackageCity { get; set; } = null;
     }
+
 }

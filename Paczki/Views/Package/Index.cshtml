@@ -14,122 +14,165 @@
 
 <h1>Okno główne – lista paczek</h1>
 
-<form method="get" asp-action="FilterPackages" class="form-check">
-    <input class="page-choice-input" name="pageChoice" type="hidden" value=@currPage />
-    <input class="form-check-input show-opened-input" type="checkbox" value="true" id="ShowOpenCheck" name="ShowOpen" checked>
-    <label class="form-check-label" for="ShowOpenCheck">
-        Pokazuj otwarte
-    </label>
+@using(Html.BeginForm()){
+@*    <input class="page-choice-input" name="pageChoice" type="hidden" value=@currPage />*@
+@*    <input class="form-check-input show-opened-input" type="checkbox" value="true" id="ShowOpenCheck" name="ShowOpen" checked>*@
+    @Html.LabelFor(model => model.ShowOpen,"pokazuj otwarte [TAK/NIE] ")
+    @Html.RadioButtonFor(model => model.ShowOpen,true)
+    @Html.RadioButtonFor(model => model.ShowOpen,false)
+    <br/>
+    @Html.LabelFor(model => model.ShowClosed,"pokazuj zamkniete [TAK/NIE] ")
+    @Html.RadioButtonFor(model => model.ShowClosed,true)
+    @Html.RadioButtonFor(model => model.ShowClosed,false)
     <br />
+
+@*    <label class="form-check-label" for="ShowOpenCheck">
+        Pokazuj otwarte
+    </label>*@
+@*    <br />
     <input class="form-check-input show-closed-input" type="checkbox" value="true" id="ShowClosedCheck" name="ShowClosed" checked>
     <label class="form-check-label" for="ShowClosedCheck">
         Pokazuj zamknięte
     </label>
-    <br/>
-    <button class="btn btn-primary" style="width:150px" type="submit">FIltruj</button>
-</form>
+    <br/>*@
+    <button class="btn btn-primary" style="width:150px" formmethod="get" asp-action="FilterPackages" >Filtruj</button>
 
-@*<div class="form-check">
+    <table class="table table-bordered table-striped" style="width:100%">
 
-</div>
-*@
-<table class="table table-bordered table-striped" style="width:100%">
-
-    <thead>
-        <tr>
-            <th>Nazwa paczki</th>
-            <th>Data utworzenia</th>
-            <th>Data zamknięcia</th>
-            <th>Czy otwarta?</th>
-            <th>Miasto docelowe</th>
-            <th></th>
-            <th></th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var package in Model.Query)
-        {
+        <thead>
             <tr>
-                <td width="20%">
-                    @package.Name
-                </td>
-                <td width="20%">
-                    @package.CreationDateTime
-                </td>
-                <td width="20%">
-                    @package.ClosedDateTime
-                </td>
-                <td width="5%" class="openedInfo">
-                    @package.Opened
-                </td>
-                <td width="10%">
-                    @package.DestinationCity
-                    </td>
-                <td width="5%">
-                    <div class="w-75 btn-group" role="group">
-                        <a asp-controller="Package" asp-action="Edit" asp-route-id="@package.PackageId">Edytuj</a>
-                    </div>
-                </td>
-                <td width="5%">
-                    <div class="w-75 btn-group" role="group">
-                        <a asp-controller="Package" id="open-button" asp-action="Open" asp-route-id="@package.PackageId">Otwórz</a>
-                    </div>
-                </td>
-                <td width="5%">
-                    <div class="w-75 btn-group" role="group">
-                        <a asp-controller="Package" id="close-button" asp-action="Close" asp-route-id="@package.PackageId">Zamknij</a>
-                    </div>
-                </td>
-                <td width="5%">
-                    <div class="w-75 btn-group" role="group">
-                        <a asp-controller="Package" asp-action="Delete" asp-route-id="@package.PackageId">Usuń</a>
-                    </div>
-                </td>
+                <th>Nazwa paczki</th>
+                <th>Data utworzenia</th>
+                <th>Data zamknięcia</th>
+                <th>Czy otwarta?</th>
+                <th>Miasto docelowe</th>
+                <th></th>
+                <th></th>
+                <th></th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var package in Model.Query)
+            {
+                <tr>
+                    <td width="20%">
+                        @package.Name
+                    </td>
+                    <td width="20%">
+                        @package.CreationDateTime
+                    </td>
+                    <td width="20%">
+                        @package.ClosedDateTime
+                    </td>
+                    <td width="5%" class="openedInfo">
+                        @package.Opened
+                    </td>
+                    <td width="10%">
+                        @package.DestinationCity
+                        </td>
+                    <td width="5%">
+                        <div class="w-75 btn-group" role="group">
+                            <a asp-controller="Package" asp-action="Edit" asp-route-id="@package.PackageId">Edytuj</a>
+                        </div>
+                    </td>
+                    <td width="5%">
+                        <div class="w-75 btn-group" role="group">
+                            <a asp-controller="Package" id="open-button" asp-action="Open" asp-route-id="@package.PackageId">Otwórz</a>
+                        </div>
+                    </td>
+                    <td width="5%">
+                        <div class="w-75 btn-group" role="group">
+                            <a asp-controller="Package" id="close-button" asp-action="Close" asp-route-id="@package.PackageId">Zamknij</a>
+                        </div>
+                    </td>
+                    <td width="5%">
+                        <div class="w-75 btn-group" role="group">
+                            <a asp-controller="Package" asp-action="Delete" asp-route-id="@package.PackageId">Usuń</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 
 
-<form method="post" asp-action="CreatePackage">
-    <input class="form-control" type="text" name="packageName" placeholder="Tu wpisz nazwę nowej paczki" />
-    <button class="btn btn-secondary" style="width:150px">
-        Dodaj nową paczkę
-    </button>
-</form>
+@*    <form method="post">*@
+@*        <input class="form-control" type="text" name="packageName" placeholder="Tu wpisz nazwę nowej paczki" />*@
+@*        <button class="btn btn-secondary" style="width:150px" type="submit" asp-action="CreatePackage">
+            Dodaj nową paczkę
+        </button>*@
+@*    </form>*@
+@*    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add-new-package-modal">Dodaj nową paczkę</button>*@
+
+    <!-- Modal -->
+    <div class="modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Utwórz przesyłkę</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+@*                        <label for="newPackageName" class="col-form-label">Nazwa paczki:</label>
+                        <input type="text" class="form-control" id="newPackageName">*@
+                        @Html.LabelFor(model => model.NewPackageName,"Nazwa paczki:")
+                        @Html.EditorFor(model => model.NewPackageName)
+                    </div>
+                    <div class="form-group">
+@*                        <label for="newPackageCity" class="col-form-label">Miejscowość docelowa:</label>
+                        <input type="text" class="form-control" id="newPackageCity">*@
+                        @Html.LabelFor(model => model.NewPackageCity,"Miasto docelowe:")
+                        @Html.EditorFor(model => model.NewPackageCity)
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="submit" formmethod="post" asp-action="CreatePackage" class="btn btn-primary">Utwórz paczkę</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="#" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">Dodaj nową paczkę</a>
 
 
-<form method="get" asp-action="TurnPage">
+
+@*<form method="get" asp-action="TurnPage">*@
 <nav aria-label="strona">
-        <label for="pageChoice">wybor strony</label>
-        <input class="form-control page-choice-input" id="page-choice" name="pageChoice" type="number" value=@currPage style="width:2cm" />
+@*        <label for="pageChoice">wybor strony</label>*@
+        @Html.LabelFor(model => model.PageChoice,"wybór strony");
+        @Html.EditorFor(model => model.PageChoice, new {@class = "form-control page-choice-input", style="width:2cm", min="1"});
+@*        <input class="form-control page-choice-input" id="page-choice" name="pageChoice" type="number" value=@currPage style="width:2cm" />*@
 @*        <button type="submit" style="cursor:pointer" class="btn btn-primary">zatwierdz</button>*@
         <div class="btn-group" role="group">
-            <button type="submit" class="btn btn-primary" style="cursor:pointer">zatwierdz</button>
+            <button type="submit" formmethod="get" asp-action="TurnPage" class="btn btn-primary" style="cursor:pointer">zatwierdź stronę</button>
             <button type="button" class="btn btn-secondary" style="cursor:pointer" onclick="decreasePageChoice()" id="page-prev">poprzednia</button>
             <button type="button" class="btn btn-success" style="cursor:pointer" onclick="incrementPageChoice()" id="page-next">następna</button>
         </div>
-        <input type="hidden" class="show-closed-input" value=@Model.ShowClosed.ToString() name="ShowClosed" checked>
-        <input type="hidden" class="show-opened-input" value=@Model.ShowOpen.ToString() name="ShowOpen" checked>
+@*        <input type="hidden" class="show-closed-input" value=@Model.ShowClosed.ToString() name="ShowClosed" checked>
+        <input type="hidden" class="show-opened-input" value=@Model.ShowOpen.ToString() name="ShowOpen" checked>*@
 </nav>
-</form>
+@*</form>*@
+}
 <p>@pageSize przesylek na strone. @numPages stron do wyswietlenia.</p>
 
 @section Scripts{
     <script type="text/javascript">
+        $(window).on('load', function () {
+            $("#PageChoice").attr("min",1);
+        });
+
         function incrementPageChoice() {
-            var currPageItem = parseInt($("#page-choice").val());
+            var currPageItem = parseInt($("#PageChoice").val());
             var numPages = @numPages;
             if (currPageItem < numPages) {
-                $("#page-choice").val(currPageItem + 1);
+                $("#PageChoice").val(currPageItem + 1);
             }
 
         }
         function decreasePageChoice() {
-            var currPageItem = parseInt($("#page-choice").val());
+            var currPageItem = parseInt($("#PageChoice").val());
             if (currPageItem > 1) {
-                $("#page-choice").val(currPageItem - 1);
+                $("#PageChoice").val(currPageItem - 1);
             }
         }
 

@@ -18,7 +18,6 @@ namespace Paczki.Repositories
         }
         public bool CreateDeliveries(IEnumerable<Delivery> deliveryList)
         {
-
             deliveryList.ToList().ForEach(delivery =>  _db.Deliveries.Add(delivery));
             _db.SaveChanges();
             return true;
@@ -54,11 +53,12 @@ namespace Paczki.Repositories
             _db.SaveChanges();
             return true;
         }
-        public bool CreatePackage(Package package)
+        public int CreatePackage(Package package)
         {
             _db.Packages.Add(package);
             _db.SaveChanges();
-            return true;
+
+            return package.PackageId;
         }
 
         public IEnumerable<Delivery> GetAllDelivery()
@@ -116,22 +116,22 @@ namespace Paczki.Repositories
             return true;
         }
 
-        public int getNumOfPackages()
+        public int GetNumOfPackages()
         {
             return _db.Packages.Count();
         }
 
-        public int getNumOfDeliveries()
+        public int GetNumOfDeliveries()
         {
             return _db.Deliveries.Count();
         }
 
-        public int getNumOfDeliveries(int? id)
+        public int GetNumOfDeliveries(int? id)
         {
             return _db.Deliveries.Where(el => el.Id == id).ToList().Count();
         }
 
-        private void _updateDateTime(Package toUpdate, PackageDtoWithId packageDto)
+        private void UpdateDateTime(Package toUpdate, PackageDtoWithId packageDto)
         {
             bool toUpdateIsOpen = toUpdate.Opened;
             bool packageDtoIsOpen = packageDto.IsOpened;
@@ -149,7 +149,7 @@ namespace Paczki.Repositories
             {
                 return false;
             }
-            _updateDateTime(toUpdate, packageDto);
+            UpdateDateTime(toUpdate, packageDto);
             
 
             toUpdate.Name = packageDto.Name;
@@ -169,7 +169,7 @@ namespace Paczki.Repositories
             _db.SaveChanges();
             return true;
         }
-        public int getPackagePosition(int? id)
+        public int GetPackagePosition(int? id)
         {
             return _db.Packages.ToList().FindIndex(p => p.PackageId == id);
         }

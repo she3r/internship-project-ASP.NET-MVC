@@ -4,18 +4,10 @@
 @using Paczki.Models;
 @model EditPackageContentsModelView;
 @{
-    int currPackageID = Model.Package.PackageId;
-    int numPackages = Enumerable.Count(Model.Query);
-    int pageSize = 5;
     ViewData["Title"] = "Edit";
-    var numPages = Math.Ceiling((double) numPackages/pageSize);
-    var currPage = 1;
     var deliveryCount = 1;
     var maxId = getMaxId();
 
-    //string jsonString = JsonConvert.SerializeObject(Model.Query, Formatting.None, new JsonSerializerSettings
-    //        { NullValueHandling = NullValueHandling.Ignore, Formatting = Formatting.Indented, 
-    //            ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 }
 @functions{
     int getMaxId()
@@ -28,10 +20,40 @@
         return (int) maxId.Id;
     }
 }
+<form id="delivery-post-all" style="width:100%">
+<!-- Modal -->
+<div class="modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Edytuj przesyłkę</h5>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    @*                        <label for="newPackageName" class="col-form-label">Nazwa paczki:</label>
+                    <input type="text" class="form-control" id="newPackageName">*@
+                    @Html.LabelFor(model => model.NewPackageName,"Nazwa paczki:")
+                    @Html.EditorFor(model => model.NewPackageName)
+                </div>
+                <div class="form-group">
+                    @*                        <label for="newPackageCity" class="col-form-label">Miejscowość docelowa:</label>
+                    <input type="text" class="form-control" id="newPackageCity">*@
+                    @Html.LabelFor(model => model.NewPackageCity,"Miasto docelowe:")
+                    @Html.EditorFor(model => model.NewPackageCity)
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="submit" formmethod="post" asp-action="EditPackageOnly" class="btn btn-primary">Utwórz paczkę</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <h1>Edytowanie paczek</h1>
 <div class="w-75 btn-group" role="group">
-    <a asp-controller="Package" asp-action="EditPackageOnly" asp-route-id="@Model.Package.PackageId">Edytuj tę paczkę</a>
+    <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal" >Edytuj informacje o paczce</a>
 </div>
 
 <table class="table table-bordered table-striped" style="width:100%">
@@ -62,17 +84,21 @@
 
 </table>
 
-<form method="post" id="delivery-post-all" asp-action="HandleEditDeliveries" asp-controller="Package" style="width:100%">
+
     <input class="form-control" type="text" name="delivery-name" id="delivery-name" style="width:30%;display:inline-block" placeholder="Tu wpisz nazwę nowej przesyłki" />
     <input class="form-control" type="number" step="0.01" name="delivery-weight" id="delivery-weight" style="width:25%;display:inline-block" placeholder="Tu wpisz wagę nowej przesyłki" />
     <a class="btn btn-secondary" style="width:150px" onclick="addTemporaryDelivery()">
         Dodaj nową przesyłkę
     </a>
-    <input type="hidden" id="json-static-deliveries-modified" name="json-static-deliveries-modified" value=""/>
-    <input type="hidden" id="json-temp-deliveries" name="json-temp-deliveries" value="" />
+    @*<input type="hidden" id="json-static-deliveries-modified" name="json-static-deliveries-modified" value=""/>*@
+    @Html.HiddenFor(model => model.JsonStaticDeliveriesModified, new{id="json-static-deliveries-modified"})
+@*    <input type="hidden" id="json-temp-deliveries" name="json-temp-deliveries" value="" />*@
+    @Html.HiddenFor(model => model.JsonTempDeliveries, new{id="json-temp-deliveries"})
     <input type="hidden" id="json-static-deliveries-to-delete" name="json-static-deliveries-to-delete" value=""/>
-    <input type="hidden" name="package-id" value="@currPackageID" />
-    <button class="btn btn-primary" type="submit" style="width:150px">
+    @Html.HiddenFor(model => model.JsonStaticDeliveriesToDelete, new{id="json-static-deliveries-to-delete"})
+   @* <input type="hidden" name="package-id" value="@currPackageID" />*@
+    @Html.HiddenFor(model => model.PackageId, new{value=Model.PackageId})
+    <button class="btn btn-primary" type="submit" asp-action="HandleEditDeliveries" asp-controller="Package" style="width:150px">
         Zatwierdź wszystkie
     </button>
 </form>
@@ -113,6 +139,7 @@
     }
     </tbody>
 </table>
+
 <form action="javascript:void(0);" id="delivery-modify" style="width:100%; display:none">
     <input class="form-control" type="text" id="edit-delivery-name" style="width:30%;display:inline-block" />
     <input class="form-control" type="number" step="0.01" id="edit-delivery-weight" style="width:25%;display:inline-block"/>
@@ -134,6 +161,8 @@
     var _foundDeliveries;
     var modifiedFoundDeliveries = [];
     var toRemoveFoundDeliveriesIds = [];
+    var currPackageName;
+    var currPackageCity;
 
     class Delivery{
         constructor(name,weight,id) 
@@ -218,20 +247,6 @@
     function saveTempDelivery(name, weight,tempID) {
             tempDeliveries.push(new Delivery(name,weight,tempID));
     }
-
-    //function incrementPageChoice() {
-    //        let currPageItem = parseInt($("#page-choice").val());
-    //        if (currPageItem < @numPages) {
-    //            $("#page-choice").val(currPageItem + 1);
-    //        }
-
-    //}
-    //function decreasePageChoice() {
-    //        let currPageItem = parseInt($("#page-choice").val());
-    //        if (currPageItem > 1) {
-    //            $("#page-choice").val(currPageItem - 1);
-    //        }
-    //}
     function addTemporaryDelivery() {
             var inputWeight = $("#delivery-weight").val();
             var inputName = $("#delivery-name").val();
@@ -270,9 +285,16 @@
             _deliveryCount++;
     }
 
+    function updateEditModal(){
+            $("#NewPackageName").attr("placeholder", currPackageName);
+            $("#NewPackageCity").attr("placeholder", currPackageCity);
+    }
+
     $(window).on('load',function(){ 
-            loadFoundDeliveries(); 
-            //modifiedDeliveries = [];
+            loadFoundDeliveries();
+            currPackageName = '@Model.Package.Name';
+            currPackageCity = '@Model.Package.DestinationCity';
+            updateEditModal();
     });
 
     $("#delivery-post-all").on('submit', function () {
