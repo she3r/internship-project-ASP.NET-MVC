@@ -21,7 +21,6 @@
     }
 }
 @using(Html.BeginForm()){
-@*    @Html.HiddenFor(model => model.IsOpened, new{})*@
 <!-- Modal -->
 <div class="modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -91,14 +90,11 @@
     <a class="btn btn-secondary" style="width:150px" onclick="addTemporaryDelivery()">
         Dodaj nową przesyłkę
     </a>
-    @*<input type="hidden" id="json-static-deliveries-modified" name="json-static-deliveries-modified" value=""/>*@
-    @Html.HiddenFor(model => model.JsonStaticDeliveriesModified, new{id="json-static-deliveries-modified"})
-@*    <input type="hidden" id="json-temp-deliveries" name="json-temp-deliveries" value="" />*@
-    @Html.HiddenFor(model => model.JsonTempDeliveries, new{id="json-temp-deliveries"})
-    <input type="hidden" id="json-static-deliveries-to-delete" name="json-static-deliveries-to-delete" value=""/>
-    @Html.HiddenFor(model => model.JsonStaticDeliveriesToDelete, new{id="json-static-deliveries-to-delete"})
-   @* <input type="hidden" name="package-id" value="@currPackageID" />*@
+    @Html.HiddenFor(model => model.JsonStaticDeliveriesModified)
+    @Html.HiddenFor(model => model.JsonTempDeliveries)
+    @Html.HiddenFor(model => model.JsonStaticDeliveriesToDelete)
     @Html.HiddenFor(model => model.PackageId, new{value=Model.PackageId})
+
     <button class="btn btn-primary float-end" type="submit" formmethod="post" id="submit-all-button" asp-action="HandleEditDeliveries" asp-controller="Package" style="width:200px">
         Zatwierdź wszystkie zmiany
     </button>
@@ -319,15 +315,7 @@
             updateEditModal();
     });
 
-    $("#delivery-post-all").on('submit', function () {
-            $("#json-temp-deliveries").val(JSON.stringify(tempDeliveries, ['Name', 'Weight']));
-            $("#json-static-deliveries-modified").val(JSON.stringify(modifiedFoundDeliveries));
-            $("#json-static-deliveries-to-delete").val(JSON.stringify(toRemoveFoundDeliveriesIds));
-            //alert(JSON.stringify(tempDeliveries, ['Name', 'Weight']));
-            //alert(JSON.stringify(modifiedFoundDeliveries), ['Name','Weight','Id']);
-            //return false;
-            return true;
-    });
+
 
     function findDelivery(arr,id){
         return arr.find(element => element.Id == id);
@@ -366,10 +354,27 @@
         return false;   // nie chcemy submitowac, wszystko w jsie jest robione
     });
 
-    $("#submit-all-button").on("submit", function(){
+    $("#submit-all-button").on("click", function(){
+        alert("submitting");
         $("#NewPackageName").val(currPackageName);
         $("#NewPackageCity").val(currPackageCity);
+        $("#JsonTempDeliveries").val(JSON.stringify(tempDeliveries));
+        $("#JsonStaticDeliveriesModified").val(JSON.stringify(modifiedFoundDeliveries));
+        $("#JsonStaticDeliveriesToDelete").val(JSON.stringify(toRemoveFoundDeliveriesIds));
         return true;
+    });
+
+    //$("#delivery-post-all").on('submit', function () {
+
+    //    //alert(JSON.stringify(tempDeliveries, ['Name', 'Weight']));
+    //    //alert(JSON.stringify(modifiedFoundDeliveries), ['Name','Weight','Id']);
+    //    //return false;
+    //    return true;
+    //});
+
+    // nie pozwalaj robic submita enterem
+    $(document).on("keydown", "form", function (event) {
+        return event.key != "Enter";
     });
 
 

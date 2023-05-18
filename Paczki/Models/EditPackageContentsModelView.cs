@@ -6,7 +6,7 @@ namespace Paczki.Models
     public class EditPackageContentsModelView
     {
         public int PackageId { get; init; }
-        //public bool IsOpened { get; set; }
+        public bool IsOpened { get; set; } = true;
         public Package? Package { get; set; }
         public IEnumerable<Delivery>? Query { get; set; }=new List<Delivery>();
         public string NewPackageName { get; set; } = "";

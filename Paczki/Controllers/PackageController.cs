@@ -54,28 +54,81 @@ namespace Paczki.Controllers
             };
         }
 
+        private IEnumerable<Package> GetTempPackagesDeserialized(string? jsonTempPackages)
+        {
+            if(jsonTempPackages is null || jsonTempPackages == "") { 
+                return Enumerable.Empty<Package>();
+            }
+            var jsonTempDeliveriesDeserialized = JsonConvert.DeserializeObject<List<PackageDtoWithId>>(jsonTempPackages);
+            var packages = new List<Package>();
+            foreach(var dto in jsonTempDeliveriesDeserialized)
+            {
+                var city = dto.DestinationCity == null ? "" : dto.DestinationCity;
+                packages.Add(new Package()
+                {
+                    Name=dto.Name,
+                    Opened=true,
+                    CreationDateTime=DateTime.Now,
+                    DestinationCity= city,
+
+                });
+            }
+            return packages;
+        }
+
+        private IEnumerable<PackageDtoWithId> GetUpdateOpenPackagesDeserialized(string? jsonUpdatePackages)
+        {
+            if (jsonUpdatePackages is null || jsonUpdatePackages == "")
+            {
+                return Enumerable.Empty<PackageDtoWithId>();
+            }
+            var jsonTempDeliveriesDeserialized = JsonConvert.DeserializeObject<List<PackageDtoUpdateOpen>>(jsonUpdatePackages);
+            var packages = new List<PackageDtoWithId>();
+            foreach (var dto in jsonTempDeliveriesDeserialized)
+            {
+                packages.Add(new PackageDtoWithId()
+                {
+                    Id=dto.Id,
+                    Name = null,
+                    IsOpened = dto.IsOpened,
+                    DestinationCity=null
+
+                });
+            }
+            return packages;
+        }
+
+        private IEnumerable<int> GetDeletePackagesDeserialized(string? jsonDeletePackagesIDs)
+        {
+            if (jsonDeletePackagesIDs is null || jsonDeletePackagesIDs == "")
+            {
+                return Enumerable.Empty<int>();
+            }
+            return JsonConvert.DeserializeObject<List<int>>(jsonDeletePackagesIDs);
+        }
+
         // POST
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CreatePackage(IndexPackageContentsModelView modelView)
+        public IActionResult HandleEditPackages(IndexPackageContentsModelView modelView)
         {
-            string? name = modelView.NewPackageName;
-            if(name is null | name == "")
+            if (modelView.NewPackagesJSON is not null)
             {
-                modelView.NewPackageName = null;
-                modelView.NewPackageCity = null;
-                return RedirectToAction("Index", modelView);
+                var toAddPackages = GetTempPackagesDeserialized(modelView.NewPackagesJSON);
+                _repository.CreatePackages(toAddPackages);
             }
-            string? city = modelView.NewPackageCity;
-            if(city is null | city == "")
+            if(modelView.ToUpdateQueryPackagesJSON is not null)
             {
-                city = "";
+                var toUpdatePackages = GetUpdateOpenPackagesDeserialized(modelView.ToUpdateQueryPackagesJSON);
+                _repository.UpdatePackages(toUpdatePackages);
             }
-            int packageId = _repository.CreatePackage(new Package() 
-            { Name = name, CreationDateTime = DateTime.Now, Opened = true,
-                DestinationCity = city });
-            var page = GetPackagePageNumByID(packageId);
-            return RedirectToAction("TurnPage", new {pageChoice = page, ShowOpen = modelView.ShowOpen, 
+            if (modelView.ToDeleteQueryPackageIDsJSON is not null)
+            {
+                var toDeletePackageIDs = JsonConvert.DeserializeObject<List<int>>(modelView.ToDeleteQueryPackageIDsJSON);
+                _repository.DeletePackages(toDeletePackageIDs);
+            }
+            
+            return RedirectToAction("TurnPage", new {pageChoice = 1, ShowOpen = modelView.ShowOpen, 
                 ShowClosed = modelView.ShowClosed});
         }
     
@@ -126,9 +179,7 @@ namespace Paczki.Controllers
                 ShowClosed = _showClosed,
                 Query = GetPage(pageChoice),
                 NumPackagesOnPage = numPackagesPerPage,
-                NumOfAllPackages = _repository.GetNumOfPackages(),
-                NewPackageCity=null,
-                NewPackageName=null
+                NumOfAllPackages = _repository.GetNumOfPackages()
             };
 
             return View("Index", modelView);
@@ -170,9 +221,7 @@ namespace Paczki.Controllers
                 ShowClosed = _showClosed,
                 PageChoice = PageChoice,
                 NumOfAllPackages = _repository.GetNumOfPackages(),
-                NumPackagesOnPage = numPackagesPerPage,
-                NewPackageCity = null,
-                NewPackageName = null
+                NumPackagesOnPage = numPackagesPerPage
             };
             return View("Index",view);
         }
@@ -266,7 +315,7 @@ namespace Paczki.Controllers
             return RedirectToAction("Index");
         }
 
-        private IEnumerable<Delivery> GetTempDeliveriesDeserialized(String jsonTempDeliveries, int packageID)
+        private IEnumerable<Delivery> GetTempDeliveriesDeserialized(string? jsonTempDeliveries, int packageID)
         {
 
             if (jsonTempDeliveries == null) { return Enumerable.Empty<Delivery>(); }
@@ -291,14 +340,14 @@ namespace Paczki.Controllers
             return deliveryList;
         }
 
-        private IEnumerable<DeliveryDtoWithId> GetStaticModifiedDeliveriesDeserialized(String jsonStaticModifiedDeliveries, int packageID)
+        private IEnumerable<DeliveryDtoWithId> GetStaticModifiedDeliveriesDeserialized(string? jsonStaticModifiedDeliveries, int packageID)
         {
             if (jsonStaticModifiedDeliveries == null) { return Enumerable.Empty<DeliveryDtoWithId>(); }
             var jsonStaticModifiedDeliveriesDeserialized = JsonConvert.DeserializeObject<List<DeliveryDtoWithId>>(jsonStaticModifiedDeliveries);
             return jsonStaticModifiedDeliveriesDeserialized;
         }
 
-        IEnumerable<int> GetStaticDeliveriesToDelete(string jsonStaticDeliveriesToDelete)
+        IEnumerable<int> GetStaticDeliveriesToDelete(string? jsonStaticDeliveriesToDelete)
         {
             var deserialized = new List<int>();
             if (jsonStaticDeliveriesToDelete != null)
@@ -325,7 +374,8 @@ namespace Paczki.Controllers
             {
                 Id = packageID,
                 Name = modelView.NewPackageName,
-                DestinationCity = modelView.NewPackageCity
+                DestinationCity = modelView.NewPackageCity,
+                IsOpened = true
             };
 
             var toCreateDeliveries = GetTempDeliveriesDeserialized(jsonTempDeliveries, packageID);

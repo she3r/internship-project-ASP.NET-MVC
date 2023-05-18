@@ -30,8 +30,9 @@
 <h1>Okno główne – lista paczek</h1>
 
 @using(Html.BeginForm()){
-@*    <input class="page-choice-input" name="pageChoice" type="hidden" value=@currPage />*@
-@*    <input class="form-check-input show-opened-input" type="checkbox" value="true" id="ShowOpenCheck" name="ShowOpen" checked>*@
+    @Html.HiddenFor(model => model.NewPackagesJSON)
+    @Html.HiddenFor(model => model.ToDeleteQueryPackageIDsJSON)
+    @Html.HiddenFor(model => model.ToUpdateQueryPackagesJSON)
     @Html.LabelFor(model => model.ShowOpen,"pokazuj otwarte [TAK/NIE] ")
     @Html.RadioButtonFor(model => model.ShowOpen,true)
     @Html.RadioButtonFor(model => model.ShowOpen,false)
@@ -41,18 +42,10 @@
     @Html.RadioButtonFor(model => model.ShowClosed,false)
     <br />
 
-@*    <label class="form-check-label" for="ShowOpenCheck">
-        Pokazuj otwarte
-    </label>*@
-@*    <br />
-    <input class="form-check-input show-closed-input" type="checkbox" value="true" id="ShowClosedCheck" name="ShowClosed" checked>
-    <label class="form-check-label" for="ShowClosedCheck">
-        Pokazuj zamknięte
-    </label>
-    <br/>*@
     <div class="p-2">
         <button class="btn btn-primary float-start" style="width:150px" formmethod="get" asp-action="FilterPackages" >Filtruj</button>
-        <button class="btn btn-secondary float-end" style="width:300px" formmethod="post" asp-action="HandleEditPackages">Zatwierdź wszystkie zmiany</button>
+        <button class="btn btn-secondary float-end" style="width:300px" id="accept-all-button" formmethod="post" 
+                asp-action="HandleEditPackages">Zatwierdź wszystkie zmiany</button>
         <br />
     </div>
     <br/><br/>
@@ -73,7 +66,7 @@
         <tbody>
             @foreach (var package in Model.Query)
             {
-                <tr>
+                <tr id="row-@package.PackageId">
                     <td width="20%">
                         @package.Name
                     </td>
@@ -96,32 +89,23 @@
                     </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a asp-controller="Package" class="open-button" asp-action="Open" asp-route-id="@package.PackageId">Otwórz</a>
+                            <a class="open-button" onclick="openQueryPackage(@package.PackageId)">Otwórz</a>
                         </div>
                     </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a asp-controller="Package" class="close-button" asp-action="Close" asp-route-id="@package.PackageId">Zamknij</a>
+                            <a class="close-button" onclick="closeQueryPackage(@package.PackageId)">Zamknij</a>
                         </div>
                     </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a asp-controller="Package" asp-action="Delete" asp-route-id="@package.PackageId">Usuń</a>
+                            <a  class="delete-button" onclick="deleteQueryPackage(@package.PackageId)">Usuń</a>
                         </div>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
-
-
-@*    <form method="post">*@
-@*        <input class="form-control" type="text" name="packageName" placeholder="Tu wpisz nazwę nowej paczki" />*@
-@*        <button class="btn btn-secondary" style="width:150px" type="submit" asp-action="CreatePackage">
-            Dodaj nową paczkę
-        </button>*@
-@*    </form>*@
-@*    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add-new-package-modal">Dodaj nową paczkę</button>*@
 
     <!-- Modal -->
     <div class="modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -132,26 +116,26 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-@*                        <label for="newPackageName" class="col-form-label">Nazwa paczki:</label>
-                        <input type="text" class="form-control" id="newPackageName">*@
-                        @Html.LabelFor(model => model.NewPackageName,"Nazwa paczki:",new{style="width:150px"})
-                        @Html.EditorFor(model => model.NewPackageName)
+                        <label style="width:150px" for="NewPackageName" class="col-form-label">Nazwa paczki:</label>
+                        <input type="text" class="form-control" id="NewPackageName">
+@*                        @Html.LabelFor(model => model.NewPackageName,"Nazwa paczki:",new{style="width:150px"})
+                        @Html.EditorFor(model => model.NewPackageName)*@
                     </div>
                     <div class="form-group">
-@*                        <label for="newPackageCity" class="col-form-label">Miejscowość docelowa:</label>
-                        <input type="text" class="form-control" id="newPackageCity">*@
-                        @Html.LabelFor(model => model.NewPackageCity,"Miasto docelowe:",new{style="width:150px"})
-                        @Html.EditorFor(model => model.NewPackageCity)
+                        <label for="NewPackageCity" class="col-form-label">Miejscowość docelowa:</label>
+                        <input type="text" class="form-control" id="NewPackageCity">
+@*                        @Html.LabelFor(model => model.NewPackageCity,"Miasto docelowe:",new{style="width:150px"})
+                        @Html.EditorFor(model => model.NewPackageCity)*@
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                    <button type="submit" formmethod="post" id="addPackageCandidate" asp-action="CreatePackage" class="btn btn-primary">Utwórz paczkę</button>
+                    <button type="button" id="addPackageCandidate" class="btn btn-primary">Utwórz paczkę</button>
                 </div>
             </div>
         </div>
     </div>
-    <a href="#" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">Dodaj nową paczkę</a>
+    <a type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">Dodaj nową paczkę</a>
 
 
 
@@ -160,10 +144,10 @@
     <p id="vertical-space"></p>
     <p id="vertical-space"></p>
     <p id="vertical-space"></p>
+@*    <p id="vertical-space"></p>
     <p id="vertical-space"></p>
     <p id="vertical-space"></p>
-    <p id="vertical-space"></p>
-    <p id="vertical-space"></p>
+    <p id="vertical-space"></p>*@
 <div>
     @Html.LabelFor(model => model.PageChoice,"wybór strony")
     @Html.EditorFor(model => model.PageChoice, new {@class = "form-control page-choice-input", style="width:0.5cm", min="1"})
@@ -172,7 +156,7 @@
 @*        <button type="submit" style="cursor:pointer" class="btn btn-primary">zatwierdz</button>*@
     <br/><br/>
     <div class="btn-group" role="group">
-        <button type="submit" formmethod="get" asp-action="TurnPage" class="btn btn-primary" style="cursor:pointer">zatwierdź stronę</button>
+        <button type="submit" formmethod="get" id="change-page-button" asp-action="TurnPage" class="btn btn-primary" style="cursor:pointer">zatwierdź stronę</button>
         <button type="button" class="btn btn-secondary" style="cursor:pointer" onclick="decreasePageChoice()" id="page-prev">poprzednia</button>
         <button type="button" class="btn btn-success" style="cursor:pointer" onclick="incrementPageChoice()" id="page-next">następna</button>
     </div>
@@ -185,21 +169,67 @@
 
 @section Scripts{
     <script type="text/javascript">
+    var newPackages = [];    // Name: , DestinationCity:
+    var isOpenedOnStart = [];
+    var toDeleteQueryPackageIDs = [];
+    var updatedQueryPackages = [];
+    var tempIdCount = @(maxID + 1);
+    const numToHide = 5;
+    var hiddenEntities = 0;
+
         class Package {
-            constructor(name, city, tempID) {
+            constructor(name, city, ID) {
                 this.Name = name;
                 this.City = city;
-                this.TempId = tempID;
+                this.TempId = ID;
             }
         }
-        var newPackages = [];    // Name: , DestinationCity:
-        //var hiddenPackages = [];
-        var hiddenIDCount = @(maxID + 1);
-        const numToHide = 5;
-        var hiddenEntities = 0;
+        class PackageUpdateOpen{
+            constructor(id,isOpened){
+                this.Id = id;
+                this.IsOpened = isOpened;
+            }
+        }
+
+
+        function updateQueryPackage(queryID,isOpened){
+            var index = updatedQueryPackages.findIndex(item => item.Id == queryID);
+            if (index < 0) {
+                updatedQueryPackages.push(new PackageUpdateOpen(queryID, isOpened));
+            }
+            else {
+                updatedQueryPackages[index].IsOpened = isOpened;
+            }
+            updateLayoutIsOpened(queryID, isOpened);
+        }
+
+        function updateLayoutIsOpened(id, isOpened){
+            $("#packages-table tr").each(function () {
+                if ($(this).attr("id") == `row-${id}`) {
+                    isOpened = isOpened.toString();
+                    $(this).find(".openedInfo").text(isOpened.charAt(0).toUpperCase()
+                        + isOpened.slice(1));   //capitalized True/False
+                    $(this).find(".edit-button").removeClass("disabled");
+                }
+            });
+        }
+
+        function openQueryPackage(queryID){
+            updateQueryPackage(queryID,true);
+        }
+
+        function closeQueryPackage(queryID) {
+            updateQueryPackage(queryID,false);
+        }
 
         $(window).on('load', function () {
             $("#PageChoice").attr("min", 1);
+                $("#packages-table tr").each(function () {
+                    var id = $(this).attr("id");
+                    isOpenedOnStart.push({
+                        "Id": id, "IsOpen": $(this).find(".openedInfo").text().replace(/[^0-9A-Z]+/gi, "")
+                    });
+            });
             
         });
         $("#addPackageCandidate").on("click", function(){
@@ -207,25 +237,54 @@
                 alert("Nie można dodać więcej niż 5 paczek bez zapisywania.");
                 return false;
             }
+            $("#exampleModal").modal('hide');
+
             var candidateName = $("#NewPackageName").val();
             var candidateCity = $("#NewPackageCity").val();
-            newPackages.push(new Package(candidateName, candidateCity, hiddenIDCount));
-            hiddenIDCount++;
+            $("#NewPackageName").val("");
+            $("#NewPackageCity").val("");
+            newPackages.push(new Package(candidateName, candidateCity, tempIdCount));
+            tempIdCount++;
             pushNewPackageToTable();
         });
 
         function appendNewRowToTable(){
-            var newRow = newPackages.slice(-1);
-            row = $(`<tr class='temp-package' id=${newRow.TempId}></tr>`);
+            var newRow = newPackages.slice(-1)[0];
+            row = $(`<tr class='temp-package' id='row-${newRow.TempId}'></tr>`);
             nameCol = $(`<td>${newRow.Name}</td>`);
-            dateBornCol = $("<td><strong>teraz!</strong></td>");
-            dateClosedCol = $("<td></td>");
-            isOpenedCol = $("<td></td>");
-            cityCol = $("<td></td>");
-            editCol = $(String.raw`<td><a href="#" onclick="alertNotSaved()">Edytuj</a></td>`);
-            openCol = $(String.raw`<td><a href="#" onclick="alertNotSaved()">Otwórz</a></td>`);
-            closeCol = $(String.raw`<td><a href="#" onclick="alertNotSaved()">Zamknij</a></td>`);
-            row.append(nameCol, dateBornCol, dateClosedCol, isOpenedCol, cityCol, editCol,openCol,closeCol).prependTo("#packages-table");
+            dateBornCol = $("<td><strong>zatwierdź zmiany</strong></td>");
+            dateClosedCol = $("<td><strong>zatwierdź zmiany</strong></td>");
+            isOpenedCol = $("<td><strong>True</strong></td>");
+            cityCol = $(`<td>${newRow.City}</td>`);
+            editCol = $(String.raw`<td><a onclick="alertNotSaved()">Edytuj</a></td>`);
+            openCol = $(String.raw`<td><a  onclick="alertNotSaved()">Otwórz</a></td>`);
+            closeCol = $(String.raw`<td><a  onclick="alertNotSaved()">Zamknij</a></td>`);
+            deleteCol = $(String.raw`<td><a onclick="deleteTemp(` + newRow.TempId + String.raw`)">Usuń</a></td>`)
+            row.append(nameCol, dateBornCol, dateClosedCol, isOpenedCol, cityCol, editCol, openCol, closeCol, deleteCol).prependTo("#packages-table");
+        }
+
+        function deleteTemp(id) {
+            $("#packages-table tr").each(function(){
+                if ($(this).attr("id") == `row-${id}`) {
+                    $(this).remove();               
+                }
+            });
+            newPackages = newPackages.filter(item => item.TempId != id);
+            unhideLastRowInTable();
+            return false;
+        }
+        function deleteQueryPackage(id){
+            if(confirm("Czy na pewno chcesz usunąć paczkę?")){
+                alert("Trwałe usunięcie paczki po zatwierdzeniu wszystkich zmian.");
+                $("#packages-table tr").each(function () {
+                    if ($(this).attr("id") == `row-${id}`) {
+                        $(this).remove();
+                    }
+                });
+                toDeleteQueryPackageIDs.push(id);
+                unhideLastRowInTable();
+            }
+            //return false;
         }
 
         function alertNotSaved(){
@@ -238,12 +297,13 @@
         }
 
         function unhideLastRowInTable(){
-            $(`#packages-table tr:nth-child(${numToHide})`).show();
+            var numToUnhide = numToHide;
+            $(`#packages-table tr:nth-child(${numToUnhide})`).show();
         }
 
         function pushNewPackageToTable(){
             var currNumOfRowsOnPage = @Model.Query.Count() + newPackages.length;
-            if(currNumOfRowsOnPage > 5){
+            if(currNumOfRowsOnPage > 5){    // jesli w tabeli jest wiecej niz 5 elementow
                 hideLastRowInTable();
             }
             appendNewRowToTable();
@@ -278,22 +338,24 @@
         });
 
 
-        $(document).delegate(".open-button","click",function(){
-            var isOpened = $(this).closest("tr").find(".openedInfo").text();
-            isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
-            //alert(isOpened);
-            return (isOpened != 'True');
-        });
+        //$(document).delegate(".open-button","click",function(){
+        //    var isOpened = $(this).closest("tr").find(".openedInfo").text();
+        //    isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
+        //    //alert(isOpened);
+        //    return (isOpened != 'True');
+        //});
 
-        $(document).delegate(".close-button", "click", function () {
-            var isOpened = $(this).closest("tr").find(".openedInfo").text();
-            isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
-            //alert(isOpened);
-            return (isOpened == 'True');
-        });
+        //$(document).delegate(".close-button", "click", function () {
+        //    var isOpened = $(this).closest("tr").find(".openedInfo").text();
+        //    isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
+        //    //alert(isOpened);
+        //    return (isOpened == 'True');
+        //});
 
         $(document).delegate(".edit-button", "click", function(){
             var isOpened = $(this).closest("tr").find(".openedInfo").text();
+            var rowId = $(this).closest("tr").attr("id");
+            //alert(rowId);
             isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
             isOpened = (isOpened == 'True');
             if(!isOpened){
@@ -301,8 +363,30 @@
                 $(this).addClass('disabled');
                 return false;
             }
-            return true;
+            var isOpened = isOpenedOnStart.find(element => element.Id == rowId).IsOpen;
+
+            if (isOpened == 'True') {
+                return confirm("Czy na pewno chcesz kontynuowac bez zapisywania?");
+            }
+            alert("Zatwierdź zmiany aby móc edytować otwartą paczkę");
+            return false;
+           
         });
+
+        $("#accept-all-button").on("click", function(){
+            alert("dada");
+            if(confirm("Czy na pewno chcesz zapisac zmiany?")){
+                $("#NewPackagesJSON").val(JSON.stringify(newPackages));
+                $("#ToDeleteQueryPackageIDsJSON").val(JSON.stringify(toDeleteQueryPackageIDs));
+                $("#ToUpdateQueryPackagesJSON").val(JSON.stringify(updatedQueryPackages));
+                return true;
+            }
+            return false;
+        });
+
+        $("#change-page-button").on("click", function(){
+            return confirm("Czy na pewno chcesz kontynować? Zmiana strony spowoduje utratę dokonanych zmian.");
+        })
 
     </script>
 }

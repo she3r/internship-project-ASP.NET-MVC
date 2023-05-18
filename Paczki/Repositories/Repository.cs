@@ -22,6 +22,12 @@ namespace Paczki.Repositories
             _db.SaveChanges();
             return true;
         }
+        public bool CreatePackages(IEnumerable<Package> packageList)
+        {
+            packageList.ToList().ForEach(package => _db.Packages.Add(package));
+            _db.SaveChanges();
+            return true;
+        }
         bool IRepository.UpdateDelivery(DeliveryDtoWithId delivery)
         {
 
@@ -36,6 +42,24 @@ namespace Paczki.Repositories
             _db.SaveChanges();
             return true;
             
+        }
+
+        public bool UpdatePackages(IEnumerable<PackageDtoWithId> packageList)
+        {
+            foreach (var package in packageList)
+            {
+                Package? toUpdate = _db.Packages.Where(d => d.PackageId == package.Id).FirstOrDefault();
+                if (toUpdate == null)
+                {
+                    return false;
+                }
+
+                toUpdate.Name = package.Name is null ? toUpdate.Name : package.Name;
+                toUpdate.DestinationCity = package.DestinationCity is null ? toUpdate.DestinationCity : package.DestinationCity;
+                toUpdate.Opened = package.IsOpened;
+            }
+            _db.SaveChanges();
+            return true;
         }
         bool IRepository.UpdateDeliveries(IEnumerable<DeliveryDtoWithId> deliveryList)
         {
@@ -115,6 +139,17 @@ namespace Paczki.Repositories
             }
             return true;
         }
+        public bool DeletePackages(IEnumerable<int> ids)
+        {
+            foreach (var id in ids)
+            {
+                var toDelete = new Package() { PackageId = id };
+                _db.Packages.Attach(toDelete);
+                _db.Packages.Remove(toDelete);
+                _db.SaveChanges();
+            }
+            return true;
+        }
 
         public int GetNumOfPackages()
         {
@@ -152,12 +187,14 @@ namespace Paczki.Repositories
             UpdateDateTime(toUpdate, packageDto);
             
 
-            toUpdate.Name = packageDto.Name;
+            toUpdate.Name = packageDto.Name is null ? toUpdate.Name : packageDto.Name;
             toUpdate.Opened = packageDto.IsOpened;
-            toUpdate.DestinationCity = packageDto.DestinationCity;
+            toUpdate.DestinationCity = packageDto.DestinationCity is null ? toUpdate.DestinationCity : packageDto.DestinationCity ;
             _db.SaveChanges();
             return true;
         }
+
+
 
         public bool DeletePackage(int? id)
         {

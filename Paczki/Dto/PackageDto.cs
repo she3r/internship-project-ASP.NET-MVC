@@ -8,4 +8,13 @@
         public string DestinationCity { get; set; }
 
     }
+
+    public class PackageDtoUpdateOpen
+    {
+        public int Id { get; set; }
+        public bool IsOpened { get; set; }
+    }
 }
+//this.Name = name;
+//this.City = city;
+//this.TempId = ID;

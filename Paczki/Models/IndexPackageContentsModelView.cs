@@ -9,8 +9,9 @@
         public int NumOfAllPackages { get; set; }
         public int NumPackagesOnPage { get;set; }
 
-        public string? NewPackageName { get; set; } = null;
-        public string? NewPackageCity { get; set; } = null;
+        public string? NewPackagesJSON { get; set; } = null;
+        public string? ToDeleteQueryPackageIDsJSON { get; set; } = null;
+        public string? ToUpdateQueryPackagesJSON { get; set; } = null;
     }
 
 }
