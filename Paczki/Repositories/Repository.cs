@@ -28,6 +28,21 @@ namespace Paczki.Repositories
             _db.SaveChanges();
             return true;
         }
+        public bool UpdateClosePackage(PackageDtoWithId packageDto)
+        {
+            Package? toUpdate = _db.Packages.Where(p => p.PackageId == packageDto.Id).FirstOrDefault();
+            if (toUpdate == null)
+            {
+                return false;
+            }
+            UpdateDateTime(toUpdate, packageDto);
+            toUpdate.Name = packageDto.Name is null ? toUpdate.Name : packageDto.Name;
+            toUpdate.Opened = packageDto.IsOpened;
+            toUpdate.DestinationCity = packageDto.DestinationCity is null ? toUpdate.DestinationCity : packageDto.DestinationCity;
+            toUpdate.ClosedDateTime = DateTime.Now;
+            _db.SaveChanges();
+            return true;
+        }
         bool IRepository.UpdateDelivery(DeliveryDtoWithId delivery)
         {
 
@@ -56,6 +71,10 @@ namespace Paczki.Repositories
 
                 toUpdate.Name = package.Name is null ? toUpdate.Name : package.Name;
                 toUpdate.DestinationCity = package.DestinationCity is null ? toUpdate.DestinationCity : package.DestinationCity;
+                if(toUpdate.Opened != package.IsOpened)
+                {
+                    toUpdate.ClosedDateTime = DateTime.Now;
+                }
                 toUpdate.Opened = package.IsOpened;
             }
             _db.SaveChanges();

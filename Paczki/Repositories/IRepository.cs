@@ -14,6 +14,7 @@ namespace Paczki.Repositories
         bool CreateDelivery(Delivery delivery);
         bool CreateDeliveries(IEnumerable<Delivery> deliveryList);
         bool UpdatePackage(PackageDtoWithId packageDto);
+        bool UpdateClosePackage(PackageDtoWithId packageDto);
         bool UpdatePackages(IEnumerable<PackageDtoWithId> packageList);
         bool UpdateDelivery(DeliveryDtoWithId delivery);
         bool UpdateDeliveries(IEnumerable<DeliveryDtoWithId> deliveryList);

@@ -231,23 +231,33 @@ namespace Paczki.Controllers
         {
             return View();
         }
-
-
-        private int GetPageFromPositionInDb(int position)
+        [HttpGet]
+        public IActionResult GoBack(int id, EditPackageContentsModelView modelView)
         {
-            var postsPerPage = numPackagesPerPage;
-            var numItTable = (position + 1) % postsPerPage;
-            var totalNumOfPackages = _repository.GetNumOfPackages();
-            var page = (_repository.GetNumOfPackages() - numItTable) / postsPerPage;
-            return page + 1;
+            return RedirectToAction("TurnPage", new
+            {
+                pageChoice = GetPackagePageNumByID(id),
+                ShowOpen = true,
+                ShowClosed = true
+            });
         }
+
+
+        //private int GetPageFromPositionInDb(int position)
+        //{
+        //    var postsPerPage = numPackagesPerPage;
+        //    var numItTable = (position + 1) % postsPerPage;
+        //    var totalNumOfPackages = _repository.GetNumOfPackages();
+        //    var page = (_repository.GetNumOfPackages() - numItTable) / postsPerPage;
+        //    return page + 1;
+        //}
 
         private int GetPackagePageNumByID(int id)
         {
-            int pos = _repository.GetPackagePosition(id);
+            int pos = _repository.GetPackagePosition(id) + 1;
             int numOnPage = pos % numPackagesPerPage;
-            int numPage = (_repository.GetNumOfPackages() - numOnPage) / numPackagesPerPage;
-            return numPage;
+            if(numOnPage == 0) { return pos / numPackagesPerPage; }
+            return pos / numPackagesPerPage + 1;
         }
 
         private IEnumerable<Package> GetPackagePageByID(int id)
@@ -273,7 +283,7 @@ namespace Paczki.Controllers
                 IsOpened = package.Opened
             };
             _repository.UpdatePackage(toEdit);
-            int page = GetPageFromPositionInDb(_repository.GetPackagePosition(id));
+            int page = GetPackagePageNumByID(id);
             return View("Edit", id);
         }
         public IActionResult Delete(int? id)
@@ -284,36 +294,36 @@ namespace Paczki.Controllers
             return RedirectToAction("Index");
         }
 
-        public IActionResult Open(int? id)
-        {
-            if(id == null)
-                    return BadRequest();
-            var packageFromId = _repository.GetPackage(id);
-            var toUpdate = new PackageDtoWithId()
-            {
-                Id = packageFromId.PackageId,
-                Name = packageFromId.Name,
-                IsOpened=true,
-                DestinationCity = packageFromId.DestinationCity
-            };
-            _repository.UpdatePackage(toUpdate);
-            return RedirectToAction("Index");
-        }
+        //public IActionResult Open(int? id)
+        //{
+        //    if(id == null)
+        //            return BadRequest();
+        //    var packageFromId = _repository.GetPackage(id);
+        //    var toUpdate = new PackageDtoWithId()
+        //    {
+        //        Id = packageFromId.PackageId,
+        //        Name = packageFromId.Name,
+        //        IsOpened=true,
+        //        DestinationCity = packageFromId.DestinationCity
+        //    };
+        //    _repository.UpdatePackage(toUpdate);
+        //    return RedirectToAction("Index");
+        //}
 
-        public IActionResult Close(int? id) {
-            if (id == null)
-                return BadRequest();
-            var packageFromId = _repository.GetPackage(id);
-            var toUpdate = new PackageDtoWithId()
-            {
-                Id = packageFromId.PackageId,
-                Name = packageFromId.Name,
-                IsOpened = false,
-                DestinationCity = packageFromId.DestinationCity
-            };
-            _repository.UpdatePackage(toUpdate);
-            return RedirectToAction("Index");
-        }
+        //public IActionResult Close(int? id) {
+        //    if (id == null)
+        //        return BadRequest();
+        //    var packageFromId = _repository.GetPackage(id);
+        //    var toUpdate = new PackageDtoWithId()
+        //    {
+        //        Id = packageFromId.PackageId,
+        //        Name = packageFromId.Name,
+        //        IsOpened = false,
+        //        DestinationCity = packageFromId.DestinationCity
+        //    };
+        //    _repository.UpdateClosePackage(toUpdate);
+        //    return RedirectToAction("Index");
+        //}
 
         private IEnumerable<Delivery> GetTempDeliveriesDeserialized(string? jsonTempDeliveries, int packageID)
         {

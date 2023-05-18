@@ -52,9 +52,14 @@
 
 
 <h1>Formularz przesyłek</h1>
+    <div class="float-start mb-3 mt-1">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            Edytuj informacje o paczce
+        </button>
+    </div>
+    <div class="float-stop mb-3 mt-1"><button asp-action="GoBack" asp-route-id="@Model.Package.PackageId" formmethod="get"
+        class="btn btn-secondary float-end">Powrót do listy paczek</button></div>
 
-  <button class="btn btn-primary float-start mb-3 mt-1" data-bs-toggle="modal" data-bs-target="#exampleModal">Edytuj informacje o paczce</button>
-  <button class="btn btn-secondary float-end mb-3 mt-1">Powrót do listy paczek</button>
 
 
 <table class="table table-bordered table-striped" style="width:100%">
@@ -344,7 +349,7 @@
         var modifiedName = $("#edit-delivery-name").val();
         var modifiedWeight = $("#edit-delivery-weight").val();
         var deliveryId = $("#edit-delivery-id").val();
-        alert("curr delivery id=" + deliveryId);
+        //alert("curr delivery id=" + deliveryId);
         if (modifiedName != "" && modifiedWeight != "") {
             modifiedFoundDeliveries.push(new Delivery(modifiedName,modifiedWeight,deliveryId));
         }
@@ -356,7 +361,7 @@
     });
 
     $("#submit-all-button").on("click", function(){
-        alert("submitting");
+        //alert("submitting");
         $("#NewPackageName").val(currPackageName);
         $("#NewPackageCity").val(currPackageCity);
         $("#JsonTempDeliveries").val(JSON.stringify(tempDeliveries));
