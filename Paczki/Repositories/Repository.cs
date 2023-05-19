@@ -71,7 +71,7 @@ namespace Paczki.Repositories
 
                 toUpdate.Name = package.Name is null ? toUpdate.Name : package.Name;
                 toUpdate.DestinationCity = package.DestinationCity is null ? toUpdate.DestinationCity : package.DestinationCity;
-                if(toUpdate.Opened != package.IsOpened)
+                if(toUpdate.Opened != package.IsOpened && package.IsOpened == false)
                 {
                     toUpdate.ClosedDateTime = DateTime.Now;
                 }
@@ -213,7 +213,7 @@ namespace Paczki.Repositories
             return true;
         }
 
-
+        
 
         public bool DeletePackage(int? id)
         {
