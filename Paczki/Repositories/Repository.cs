@@ -84,6 +84,7 @@ namespace Paczki.Repositories
         {
             foreach (var delivery in deliveryList)
             {
+                if (!delivery.IsModified) { continue; }
                 Delivery? toUpdate = _db.Deliveries.Where(d => d.Id == delivery.Id).FirstOrDefault();
                 if (toUpdate == null)
                 {
@@ -92,6 +93,28 @@ namespace Paczki.Repositories
 
                 toUpdate.Name = delivery.Name;
                 toUpdate.Weight = delivery.Weight;
+            }
+            _db.SaveChanges();
+            return true;
+        }
+
+        public bool UpdateOrInsertDeliveries(IEnumerable<DeliveryDtoWithId> deliveryList)
+        {
+            foreach(var delivery in deliveryList)
+            {
+                if (!delivery.IsModified) { continue; }
+                Delivery? toUpdate = _db.Deliveries.Where(d => d.Id == delivery.Id && d.PackageRefId == d.PackageRefId).FirstOrDefault();
+                if(toUpdate == null && _db.Packages.Any(p => p.PackageId == delivery.PackageRefId)) {
+                    CreateDelivery(new Delivery()
+                    {
+                        PackageRefId = delivery.PackageRefId,
+                        Package = GetPackage(delivery.PackageRefId),
+                        Name = delivery.Name,
+                        CreationDateTime = delivery.CreationDateTime,
+                        Weight = delivery.Weight
+
+                    });              
+                }
             }
             _db.SaveChanges();
             return true;
@@ -170,9 +193,18 @@ namespace Paczki.Repositories
             return true;
         }
 
-        public int GetNumOfPackages()
+        public int GetNumOfPackages(bool countOpened = true, bool countClosed = true)
         {
-            return _db.Packages.Count();
+            IEnumerable<Package> query = _db.Packages.ToList();
+            if (!countOpened)
+            {
+                query = query.Where(p => !p.Opened);
+            }
+            if (!countClosed)
+            {
+                query = query.Where(p => p.Opened);
+            }
+            return query.Count();
         }
 
         public int GetNumOfDeliveries()

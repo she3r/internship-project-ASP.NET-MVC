@@ -30,9 +30,9 @@
 <h1>Okno główne – lista paczek</h1>
 
 @using(Html.BeginForm()){
-    @Html.HiddenFor(model => model.NewPackagesJSON)
-    @Html.HiddenFor(model => model.ToDeleteQueryPackageIDsJSON)
-    @Html.HiddenFor(model => model.ToUpdateQueryPackagesJSON)
+    @Html.HiddenFor(model => model.NumPackagesOnPage)
+    @Html.HiddenFor(model => model.NumOfAllPackages)
+
     @Html.LabelFor(model => model.ShowOpen,"pokazuj otwarte [TAK/NIE] ")
     @Html.RadioButtonFor(model => model.ShowOpen,true)
     @Html.RadioButtonFor(model => model.ShowOpen,false)
@@ -44,8 +44,8 @@
 
     <div class="p-2">
         <button class="btn btn-primary float-start" style="width:150px" formmethod="get" asp-action="FilterPackages" >Filtruj</button>
-        <button class="btn btn-secondary float-end" style="width:300px" id="accept-all-button" formmethod="post" 
-                asp-action="HandleEditPackages">Zatwierdź wszystkie zmiany</button>
+@*        <button class="btn btn-secondary float-end" style="width:300px" id="accept-all-button" formmethod="post" 
+                asp-action="HandleEditPackages">Zatwierdź wszystkie zmiany</button>*@
         <br />
     </div>
     <br/><br/>
@@ -68,19 +68,19 @@
             {
                 <tr id="row-@package.PackageId">
                     <td width="20%">
-                        @package.Name
+                        @Html.DisplayFor(model => package.Name)
                     </td>
                     <td width="20%">
-                        @package.CreationDateTime
+                        @Html.DisplayFor(model => package.CreationDateTime)
                     </td>
                     <td width="20%">
-                        @package.ClosedDateTime
+                        @Html.DisplayFor(model => package.ClosedDateTime)
                     </td>
                     <td width="5%" class="openedInfo">
                         @package.Opened
                     </td>
                     <td width="10%">
-                        @package.DestinationCity
+                        @Html.DisplayFor(model => package.DestinationCity)
                         </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
@@ -89,17 +89,17 @@
                     </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a class="open-button" onclick="openQueryPackage(@package.PackageId)">Otwórz</a>
+                            <a class="open-button" asp-action="Open" asp-route-id="@package.PackageId">Otwórz</a>
                         </div>
                     </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a class="close-button" onclick="closeQueryPackage(@package.PackageId)">Zamknij</a>
+                            <a class="close-button" asp-action="Close" asp-route-id="@package.PackageId">Zamknij</a>
                         </div>
                     </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a  class="delete-button" onclick="deleteQueryPackage(@package.PackageId)">Usuń</a>
+                            <a class="delete-button" asp-action="Delete" asp-route-id="@package.PackageId">Usuń</a>
                         </div>
                     </td>
                 </tr>
@@ -135,19 +135,12 @@
             </div>
         </div>
     </div>
-    <a type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">Dodaj nową paczkę</a>
+@*    <a type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">Dodaj nową paczkę</a>*@
+    <a type="button" class="btn btn-primary" asp-action="AddNewPackage">Dodaj nową paczkę</a>
 
 
 
     <p id="vertical-space"></p>
-    <p id="vertical-space"></p>
-    <p id="vertical-space"></p>
-    <p id="vertical-space"></p>
-    <p id="vertical-space"></p>
-@*    <p id="vertical-space"></p>
-    <p id="vertical-space"></p>
-    <p id="vertical-space"></p>
-    <p id="vertical-space"></p>*@
 <div>
     @Html.LabelFor(model => model.PageChoice,"wybór strony")
     @Html.EditorFor(model => model.PageChoice, new {@class = "form-control page-choice-input", style="width:0.5cm", min="1"})
@@ -165,7 +158,7 @@
 </div>
 
 }
-<p>@pageSize przesylek na strone. @numPages stron do wyswietlenia.</p>
+<p>Maksymalnie @pageSize przesylek na strone. @numPages stron do wyswietlenia. Obecnie jest @Model.Query.Count() paczek na stronie.</p>
 
 @section Scripts{
     <script type="text/javascript">
@@ -352,26 +345,26 @@
         //    return (isOpened == 'True');
         //});
 
-        $(document).delegate(".edit-button", "click", function(){
-            var isOpened = $(this).closest("tr").find(".openedInfo").text();
-            var rowId = $(this).closest("tr").attr("id");
-            //alert(rowId);
-            isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
-            isOpened = (isOpened == 'True');
-            if(!isOpened){
-                alert("Nie można edytować zamkniętej paczki.");
-                $(this).addClass('disabled');
-                return false;
-            }
-            var isOpened = isOpenedOnStart.find(element => element.Id == rowId).IsOpen;
+        //$(document).delegate(".edit-button", "click", function(){
+        //    var isOpened = $(this).closest("tr").find(".openedInfo").text();
+        //    var rowId = $(this).closest("tr").attr("id");
+        //    //alert(rowId);
+        //    isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
+        //    isOpened = (isOpened == 'True');
+        //    if(!isOpened){
+        //        alert("Nie można edytować zamkniętej paczki.");
+        //        $(this).addClass('disabled');
+        //        return false;
+        //    }
+        //    var isOpened = isOpenedOnStart.find(element => element.Id == rowId).IsOpen;
 
-            if (isOpened == 'True') {
-                return confirm("Czy na pewno chcesz kontynuowac bez zapisywania?");
-            }
-            alert("Zatwierdź zmiany aby móc edytować otwartą paczkę");
-            return false;
+        //    if (isOpened == 'True') {
+        //        return confirm("Czy na pewno chcesz kontynuowac bez zapisywania?");
+        //    }
+        //    alert("Zatwierdź zmiany aby móc edytować otwartą paczkę");
+        //    return false;
            
-        });
+        //});
 
         $("#accept-all-button").on("click", function(){
             //alert("dada");
@@ -384,8 +377,8 @@
             return false;
         });
 
-        $("#change-page-button").on("click", function(){
-            return confirm("Czy na pewno chcesz kontynować? Zmiana strony spowoduje utratę dokonanych zmian.");
+        $(".delete-button").on("click", function(){
+            return confirm("Czy na pewno chcesz kontynować? Usunięcie spowoduje trwałą utratę danych.");
         })
 
     </script>

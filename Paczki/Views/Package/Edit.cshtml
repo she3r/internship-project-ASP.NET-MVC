@@ -20,42 +20,14 @@
         return (int) maxId.Id;
     }
 }
-@using(Html.BeginForm()){
-<!-- Modal -->
-<div class="modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Edytuj przesyłkę</h5>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    @*                        <label for="newPackageName" class="col-form-label">Nazwa paczki:</label>
-                    <input type="text" class="form-control" id="newPackageName">*@
-                        @Html.LabelFor(model => model.NewPackageName,"Nazwa paczki: ",new{style="width:150px"})
-                    @Html.EditorFor(model => model.NewPackageName)
-                </div>
-                <div class="form-group">
-                    @*                        <label for="newPackageCity" class="col-form-label">Miejscowość docelowa:</label>
-                    <input type="text" class="form-control" id="newPackageCity">*@
-                        @Html.LabelFor(model => model.NewPackageCity,"Miasto docelowe: ",new{style="width:150px"})
-                    @Html.EditorFor(model => model.NewPackageCity)
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                <button type="button" onclick="updateTempPackage()" class="btn btn-primary">Zatwierdź</button>
-            </div>
-        </div>
-    </div>
-</div>
-
+<form method="post">
+    @Html.HiddenFor(model => model.SourceIndexPageNum)
 
 <h1>Formularz przesyłek</h1>
     <div class="float-start mb-3 mt-1">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+@*        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
             Edytuj informacje o paczce
-        </button>
+        </button>*@
     </div>
     <div class="float-stop mb-3 mt-1"><button asp-action="GoBack" asp-route-id="@Model.Package.PackageId" formmethod="get"
         class="btn btn-secondary float-end">Powrót do listy paczek</button></div>
@@ -65,84 +37,54 @@
 <table class="table table-bordered table-striped" style="width:100%">
     <tr>
         <th>ID</th>
-        <td>@Model.Package.PackageId</td>
+        <td>@Html.DisplayFor(model => model.Package.PackageId)
+            @Html.HiddenFor(model => model.Package.PackageId)
+        </td>
+         
     </tr>
     <tr>
         <th>Nazwa</th>
-        <td id="curr-name">@Model.Package.Name</td>
+        <td id="curr-name">@Html.EditorFor(model => model.Package.Name)</td>
     </tr>
     <tr>
         <th>Opened</th>
-        <td>@Model.Package.Opened.ToString()</td>
+        <td>@Model.Package.Opened
+            @Html.HiddenFor(model => model.Package.Opened)
+        </td>
     </tr>
     <tr>
         <th>CreationDateTime</th>
-        <td>@Model.Package.CreationDateTime.ToString()</td>
+            <td>@Html.DisplayFor(model => model.Package.CreationDateTime)
+                @Html.HiddenFor(model => model.Package.CreationDateTime)
+            </td>
     </tr>
     <tr>
         <th>ClosedDateTime</th>
-        <td>@Model.Package.ClosedDateTime</td>
+            <td>@Html.DisplayFor( model => model.Package.ClosedDateTime)
+                @Html.HiddenFor( model => model.Package.ClosedDateTime)
+            </td>
     </tr>
     <tr>
         <th>DestinationCity</th>
-        <td id="curr-city">@Model.Package.DestinationCity</td>
+            <td id="curr-city">@Html.EditorFor( model => model.Package.DestinationCity)</td>
     </tr>
 
 </table>
 
-
+@*
     <input class="form-control" type="text" name="delivery-name" id="delivery-name" style="width:30%;display:inline-block" placeholder="Tu wpisz nazwę nowej przesyłki" />
-    <input class="form-control" type="number" step="0.01" name="delivery-weight" id="delivery-weight" style="width:25%;display:inline-block" placeholder="Tu wpisz wagę nowej przesyłki" />
-    <a class="btn btn-secondary" style="width:150px" onclick="addTemporaryDelivery()">
+    <input class="form-control" type="number" step="0.01" name="delivery-weight" id="delivery-weight" style="width:25%;display:inline-block" placeholder="Tu wpisz wagę nowej przesyłki" />*@
+    <button class="btn btn-secondary" type="submit" style="width:150px" asp-action="AddNewDelivery">
         Dodaj nową przesyłkę
-    </a>
-    @Html.HiddenFor(model => model.JsonStaticDeliveriesModified)
-    @Html.HiddenFor(model => model.JsonTempDeliveries)
-    @Html.HiddenFor(model => model.JsonStaticDeliveriesToDelete)
-    @Html.HiddenFor(model => model.PackageId, new{value=Model.PackageId})
+    </button>
 
-    <button class="btn btn-primary float-end" type="submit" formmethod="post" id="submit-all-button" asp-action="HandleEditDeliveries" asp-controller="Package" style="width:200px">
+    <button class="btn btn-primary float-end" type="submit" id="submit-all-button" asp-action="HandleEditDeliveries" style="width:200px">
         Zatwierdź wszystkie zmiany
     </button>
 
 
-<h2>Lista przesyłek zarejestrowanych dla powyższej paczki:</h2>
-<table class="table table-bordered table-striped" style="width:100%" id="deliveryTable">
-    <thead>
-        <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>CreationDateTime</th>
-                <th>Weight</th>
-        </tr>
-    </thead>
-    <tbody>
-    @foreach(var delivery in Model.Query)
-    {
-        <tr>
-            <td>
-                @delivery.Id
-            </td>
-            <td id="delivery-cell-name-id-@delivery.Id">
-                @delivery.Name          
-            </td>
-            <td>
-                @delivery.CreationDateTime.ToString()
-            </td>
-            <td id="delivery-cell-weight-id-@delivery.Id">
-                @delivery.Weight
-            </td>
-            <td>
-                    <a class="edit-delivery" style="cursor:pointer" data-id=@delivery.Id >Edytuj</a>
-            </td>
-            <td>
-                    <a class="delete-delivery" style="cursor:pointer" data-id=@delivery.Id>Usuń</a>
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>
-
+@Html.EditorFor(model => model.Query,"_ListDeliveryEditor")
+</form>
 @*<form action="javascript:void(0);" id="delivery-modify" style="width:100%; display:none">
     <input class="form-control" type="text" id="edit-delivery-name" style="width:30%;display:inline-block" />
     <input class="form-control" type="number" step="0.01" id="edit-delivery-weight" style="width:25%;display:inline-block"/>
@@ -153,7 +95,6 @@
     <button class="btn btn-primary" style="width:150px" id="edit-delivery-decline">
         Anuluj
     </button>*@
-}
 
 @section Scripts{
 
@@ -313,37 +254,43 @@
             $("#NewPackageCity").attr("placeholder", currPackageCity);
     }
 
-    $(window).on('load',function(){ 
-            loadFoundDeliveries();
-            currPackageName = '@Model.Package.Name';
-            currPackageCity = '@Model.Package.DestinationCity';
-            currPackageData = { "Name": '@Model.Package.Name', "City": '@Model.Package.DestinationCity' };         
-            updateEditModal();
-    });
+    //$(window).on('load',function(){ 
+    //        loadFoundDeliveries();
+    //        currPackageName = '@Model.Package.Name';
+    //        currPackageCity = '@Model.Package.DestinationCity';
+    //        currPackageData = { "Name": '@Model.Package.Name', "City": '@Model.Package.DestinationCity' };         
+    //        updateEditModal();
+    //});
 
+    //$("#deliveryTable").delegate("input[name^=Query[]", "change", function(){
+    //        alert("adadsa");
+    //})
 
+        $("input[name^=Query]").on("change",function(){
+            $(this).closest("tr").find("input[name$=IsModified]").val("True");
+        })
+    
+        function findDelivery(arr,id){
+            return arr.find(element => element.Id == id);
+        }
 
-    function findDelivery(arr,id){
-        return arr.find(element => element.Id == id);
-    }
+    //$('#deliveryTable').delegate(".edit-delivery", "click", function () {
+    //    $("#delivery-modify").show();
+    //    var deliveryId = parseInt($(this).data("id"));
+    //    var delivery = findDelivery(getDeliveryArrayByDeliveryId(deliveryId),deliveryId);
+    //    //alert(deliveryId); alert(_deliveryCount);
+    //    $("#edit-delivery-name").val(delivery["Name"]);
+    //    $("#edit-delivery-weight").val(delivery["Weight"]);
+    //    $("#edit-delivery-id").val(deliveryId);
 
-    $('#deliveryTable').delegate(".edit-delivery", "click", function () {
-        $("#delivery-modify").show();
-        var deliveryId = parseInt($(this).data("id"));
-        var delivery = findDelivery(getDeliveryArrayByDeliveryId(deliveryId),deliveryId);
-        //alert(deliveryId); alert(_deliveryCount);
-        $("#edit-delivery-name").val(delivery["Name"]);
-        $("#edit-delivery-weight").val(delivery["Weight"]);
-        $("#edit-delivery-id").val(deliveryId);
+    //});
 
-    });
+    //$('#deliveryTable').delegate(".delete-delivery", "click", function(){
+    //    var deliveryId = parseInt($(this).data("id"));
+    //    removeDeliveryFromArray(deliveryId);
+    //    $(this).parent().parent().remove();
 
-    $('#deliveryTable').delegate(".delete-delivery", "click", function(){
-        var deliveryId = parseInt($(this).data("id"));
-        removeDeliveryFromArray(deliveryId);
-        $(this).parent().parent().remove();
-
-    });
+    //});
 
     $("#delivery-modify").on("submit", function(){
         var modifiedName = $("#edit-delivery-name").val();
@@ -360,15 +307,15 @@
         return false;   // nie chcemy submitowac, wszystko w jsie jest robione
     });
 
-    $("#submit-all-button").on("click", function(){
-        //alert("submitting");
-        $("#NewPackageName").val(currPackageName);
-        $("#NewPackageCity").val(currPackageCity);
-        $("#JsonTempDeliveries").val(JSON.stringify(tempDeliveries));
-        $("#JsonStaticDeliveriesModified").val(JSON.stringify(modifiedFoundDeliveries));
-        $("#JsonStaticDeliveriesToDelete").val(JSON.stringify(toRemoveFoundDeliveriesIds));
-        return true;
-    });
+    //$("#submit-all-button").on("click", function(){
+    //    //alert("submitting");
+    //    $("#NewPackageName").val(currPackageName);
+    //    $("#NewPackageCity").val(currPackageCity);
+    //    $("#JsonTempDeliveries").val(JSON.stringify(tempDeliveries));
+    //    $("#JsonStaticDeliveriesModified").val(JSON.stringify(modifiedFoundDeliveries));
+    //    $("#JsonStaticDeliveriesToDelete").val(JSON.stringify(toRemoveFoundDeliveriesIds));
+    //    return true;
+    //});
 
     //$("#delivery-post-all").on('submit', function () {
 

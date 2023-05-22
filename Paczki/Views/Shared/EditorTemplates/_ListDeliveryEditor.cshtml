@@ -1,0 +1,39 @@
+﻿@model List<Paczki.Dto.DeliveryDtoWithId>
+
+<table class="table table-bordered table-striped" style="width:100%" id="deliveryTable">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>CreationDateTime</th>
+            <th>Weight</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for(int i=0;i<Model.Count();++i)
+        {
+            <tr>
+                <td>
+                    @Html.HiddenFor(model => model[i].IsModified)
+                    @Html.HiddenFor(model => model[i].Id)
+                    @Html.DisplayFor(model => model[i].Id)
+                </td>
+                <td>
+@*                    @Html.LabelFor(model => model[i].Name)*@
+                    @Html.EditorFor(model => model[i].Name)
+                </td>
+                <td>
+                    @Html.HiddenFor(model => model[i].CreationDateTime)
+                    @Html.DisplayFor(model => model[i].CreationDateTime)
+                </td>
+                <td>
+@*                    @Html.LabelFor(model => model[i].Weight)*@
+                    @Html.EditorFor(model => model[i].Weight)
+                </td>
+                <td>
+                    <a class="delete-delivery" style="cursor:pointer" asp-action="DeleteDelivery" asp-route-itemid="@Model[i].Id" >Usuń</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
