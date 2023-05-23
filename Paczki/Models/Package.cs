@@ -12,7 +12,7 @@ namespace Paczki.Models
         [Required,MaxLength(100),MinLength(3)]
         public string Name { get; set; }
         [Required]
-        public bool Opened { get; set; }
+        public bool Opened { get; set; } = true;
 
         public DateTime CreationDateTime { get;set; }=DateTime.Now;
         public DateTime ClosedDateTime { get; set; }

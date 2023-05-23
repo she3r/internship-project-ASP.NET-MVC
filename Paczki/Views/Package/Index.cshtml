@@ -33,6 +33,7 @@
     @Html.HiddenFor(model => model.NumPackagesOnPage)
     @Html.HiddenFor(model => model.NumOfAllPackages)
 
+
     @Html.LabelFor(model => model.ShowOpen,"pokazuj otwarte [TAK/NIE] ")
     @Html.RadioButtonFor(model => model.ShowOpen,true)
     @Html.RadioButtonFor(model => model.ShowOpen,false)
@@ -70,7 +71,7 @@
                     <td width="20%">
                         @Html.DisplayFor(model => package.Name)
                     </td>
-                    <td width="20%">
+                    <td width="20%" class="date-time-display">
                         @Html.DisplayFor(model => package.CreationDateTime)
                     </td>
                     <td width="20%">
@@ -84,22 +85,22 @@
                         </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a asp-controller="Package" class="edit-button" asp-action="Edit" asp-route-id="@package.PackageId">Edytuj</a>
+                            <button type="submit" formmethod="get" class="edit-button" asp-action="Edit" asp-route-id="@package.PackageId">Edytuj</button>
                         </div>
                     </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a class="open-button" asp-action="Open" asp-route-id="@package.PackageId">Otwórz</a>
+                            <button type="submit" formmethod="post" class="open-button" asp-action="Open" asp-route-id="@package.PackageId">Otwórz</button>
                         </div>
                     </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a class="close-button" asp-action="Close" asp-route-id="@package.PackageId">Zamknij</a>
+                            <button type="submit" formmethod="post" class="close-button" asp-action="Close" asp-route-id="@package.PackageId">Zamknij</button>
                         </div>
                     </td>
                     <td width="5%">
                         <div class="w-75 btn-group" role="group">
-                            <a class="delete-button" asp-action="Delete" asp-route-id="@package.PackageId">Usuń</a>
+                            <button type="submit" formmethod="post" class="delete-button" asp-action="Delete" asp-route-id="@package.PackageId">Usuń</button>
                         </div>
                     </td>
                 </tr>
@@ -107,36 +108,8 @@
         </tbody>
     </table>
 
-    <!-- Modal -->
-    <div class="modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Utwórz przesyłkę</h5>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label style="width:150px" for="NewPackageName" class="col-form-label">Nazwa paczki:</label>
-                        <input type="text" class="form-control" id="NewPackageName">
-@*                        @Html.LabelFor(model => model.NewPackageName,"Nazwa paczki:",new{style="width:150px"})
-                        @Html.EditorFor(model => model.NewPackageName)*@
-                    </div>
-                    <div class="form-group">
-                        <label for="NewPackageCity" class="col-form-label">Miejscowość docelowa:</label>
-                        <input type="text" class="form-control" id="NewPackageCity">
-@*                        @Html.LabelFor(model => model.NewPackageCity,"Miasto docelowe:",new{style="width:150px"})
-                        @Html.EditorFor(model => model.NewPackageCity)*@
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
-                    <button type="button" id="addPackageCandidate" class="btn btn-primary">Utwórz paczkę</button>
-                </div>
-            </div>
-        </div>
-    </div>
 @*    <a type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">Dodaj nową paczkę</a>*@
-    <a type="button" class="btn btn-primary" asp-action="AddNewPackage">Dodaj nową paczkę</a>
+    <button type="submit" formmethod="get" class="btn btn-primary" asp-action="AddNewPackage" asp-route-id="@numPages">Dodaj nową paczkę</button>
 
 
 
@@ -331,6 +304,7 @@
         });
 
 
+
         //$(document).delegate(".open-button","click",function(){
         //    var isOpened = $(this).closest("tr").find(".openedInfo").text();
         //    isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
@@ -345,26 +319,20 @@
         //    return (isOpened == 'True');
         //});
 
-        //$(document).delegate(".edit-button", "click", function(){
-        //    var isOpened = $(this).closest("tr").find(".openedInfo").text();
-        //    var rowId = $(this).closest("tr").attr("id");
-        //    //alert(rowId);
-        //    isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
-        //    isOpened = (isOpened == 'True');
-        //    if(!isOpened){
-        //        alert("Nie można edytować zamkniętej paczki.");
-        //        $(this).addClass('disabled');
-        //        return false;
-        //    }
-        //    var isOpened = isOpenedOnStart.find(element => element.Id == rowId).IsOpen;
-
-        //    if (isOpened == 'True') {
-        //        return confirm("Czy na pewno chcesz kontynuowac bez zapisywania?");
-        //    }
-        //    alert("Zatwierdź zmiany aby móc edytować otwartą paczkę");
-        //    return false;
+        $(document).delegate(".edit-button", "click", function(){
+            var isOpened = $(this).closest("tr").find(".openedInfo").text();
+            var rowId = $(this).closest("tr").attr("id");
+            //alert(rowId);
+            isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
+            isOpened = (isOpened == 'True');
+            if(!isOpened){
+                alert("Nie można edytować zamkniętej paczki.");
+                $(this).addClass('disabled');
+                return false;
+            }
+            return true;
            
-        //});
+        });
 
         $("#accept-all-button").on("click", function(){
             //alert("dada");

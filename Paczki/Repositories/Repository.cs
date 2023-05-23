@@ -103,17 +103,23 @@ namespace Paczki.Repositories
             foreach(var delivery in deliveryList)
             {
                 if (!delivery.IsModified) { continue; }
-                Delivery? toUpdate = _db.Deliveries.Where(d => d.Id == delivery.Id && d.PackageRefId == d.PackageRefId).FirstOrDefault();
+                Delivery? toUpdate = _db.Deliveries.Where(d => d.Id == delivery.Id && d.PackageRefId == d.PackageRefId &&
+                    d.Name == delivery.Name && d.Weight == delivery.Weight).FirstOrDefault();
                 if(toUpdate == null && _db.Packages.Any(p => p.PackageId == delivery.PackageRefId)) {
-                    CreateDelivery(new Delivery()
+                    var toCreate = new Delivery()
                     {
                         PackageRefId = delivery.PackageRefId,
                         Package = GetPackage(delivery.PackageRefId),
                         Name = delivery.Name,
                         CreationDateTime = delivery.CreationDateTime,
                         Weight = delivery.Weight
-
-                    });              
+                    };
+                    _db.Deliveries.Add(toCreate);          
+                }
+                else if(toUpdate != null)
+                {
+                    toUpdate.Name = delivery.Name;
+                    toUpdate.Weight = delivery.Weight;
                 }
             }
             _db.SaveChanges();
@@ -165,9 +171,24 @@ namespace Paczki.Repositories
                 if (id == null) return false;
                 var toDelete = new Delivery() { Id = (int) id };
                 _db.Deliveries.Attach(toDelete);
-                _db.Deliveries.Remove(toDelete);
-                _db.SaveChanges();
+                _db.Deliveries.Remove(toDelete);              
             }
+            _db.SaveChanges();
+            return true;
+        }
+
+        public bool DeleteDeliveries(IEnumerable<DeliveryDtoWithId> deliveries)
+        {
+            foreach(var delivery in deliveries)
+            {
+                Delivery? toRemove = _db.Deliveries.Where(d => d.Id == delivery.Id && d.PackageRefId == d.PackageRefId).FirstOrDefault();
+                if(toRemove != null)
+                {
+                    _db.Deliveries.Attach(toRemove);
+                    _db.Deliveries.Remove(toRemove);
+                }
+            }
+            _db.SaveChanges();
             return true;
         }
         public bool DeleteDeliveries(IEnumerable<Delivery> deliveries)
@@ -187,9 +208,9 @@ namespace Paczki.Repositories
             {
                 var toDelete = new Package() { PackageId = id };
                 _db.Packages.Attach(toDelete);
-                _db.Packages.Remove(toDelete);
-                _db.SaveChanges();
+                _db.Packages.Remove(toDelete);              
             }
+            _db.SaveChanges();
             return true;
         }
 

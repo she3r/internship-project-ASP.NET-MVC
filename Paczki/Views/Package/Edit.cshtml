@@ -22,6 +22,9 @@
 }
 <form method="post">
     @Html.HiddenFor(model => model.SourceIndexPageNum)
+    @Html.HiddenFor(model => model.SourceShowOpenedPage)
+    @Html.HiddenFor(model => model.SourceShowClosedPage)
+    @Html.HiddenFor(model => model.IsPackageModified)
 
 <h1>Formularz przesyłek</h1>
     <div class="float-start mb-3 mt-1">
@@ -74,7 +77,7 @@
 @*
     <input class="form-control" type="text" name="delivery-name" id="delivery-name" style="width:30%;display:inline-block" placeholder="Tu wpisz nazwę nowej przesyłki" />
     <input class="form-control" type="number" step="0.01" name="delivery-weight" id="delivery-weight" style="width:25%;display:inline-block" placeholder="Tu wpisz wagę nowej przesyłki" />*@
-    <button class="btn btn-secondary" type="submit" style="width:150px" asp-action="AddNewDelivery">
+    <button class="btn btn-secondary" type="submit" style="width:150px" formmethod="get" asp-action="AddNewDelivery">
         Dodaj nową przesyłkę
     </button>
 
@@ -109,188 +112,87 @@
     var currPackageCity;
 
 
-    class Delivery{
-        constructor(name,weight,id) 
-        { 
-            this.Name = name;
-            this.Weight = weight;
-            this.Id = id;
-        }
-        getName(){
-            return this.Name;
-        }
-        setName(name){
-            this.getName = name;
-        }
-        getWeight(){
-            return this.Weight;
-        }
-        setWeight(weight){
-            this.Weight = weight; 
-        }
-    }
+    //function saveTempDelivery(name, weight,tempID) {
+    //        tempDeliveries.push(new Delivery(name,weight,tempID));
+    //}
+    //function addTemporaryDelivery() {
+    //        var inputWeight = $("#delivery-weight").val();
+    //        var inputName = $("#delivery-name").val();
+    //        saveTempDelivery(inputName, inputWeight, _deliveryCount);
 
-    function getDeliveryArrayByDeliveryId(id){
-        if(id <= _foundDeliveryCount){
-            return _foundDeliveries;
-        }
-        else if(id < _deliveryCount){
-            return tempDeliveries;
-        }
-        else{
-            throw new Error('requesting package with non-existing id');
-        }
-    }
+    //        $("#delivery-weight").val("");
+    //        $("#delivery-name").val("");
 
-    function removeDeliveryFromArray(id){
-            if (id <= _foundDeliveryCount) {
-                modifiedFoundDeliveries = modifiedFoundDeliveries.filter(item => item.Id != id);
-                _foundDeliveries = _foundDeliveries.filter(item => item.Id != id);
-                toRemoveFoundDeliveriesIds.push(id);
+    //        var tbodyRef = document.getElementById('deliveryTable').getElementsByTagName('tbody')[0];
+    //        var newRow = tbodyRef.insertRow();
+
+    //        var newCellID = newRow.insertCell();
+    //        var newCellName = newRow.insertCell();
+    //        newCellName.id = `delivery-cell-name-id-${_deliveryCount}`;
+    //        var newCellDate = newRow.insertCell();
+    //        var newCellWeight = newRow.insertCell();
+    //        newCellWeight.id = `delivery-cell-weight-id-${_deliveryCount}`;
+    //        var newCellEdition = newRow.insertCell();
+    //        var newCellDelete = newRow.insertCell();
+
+    //        var textNodeID = document.createTextNode(_deliveryCount.toString());
+    //        var textNodeName = document.createTextNode(inputName);
+    //        var textNodeDate = document.createTextNode("teraz!");
+    //        var textNodeWeight = document.createTextNode(inputWeight);
+    //        newCellEdition.innerHTML =
+    //            `<a class="edit-delivery" style="cursor:pointer" data-id=${_deliveryCount}>Edytuj</a>`;
+
+    //        newCellDelete.innerHTML =
+    //            `<a class="delete-delivery" style="cursor:pointer" data-id=${_deliveryCount}>Usun</a>`;
+
+    //        newCellID.appendChild(textNodeID);
+    //        newCellName.appendChild(textNodeName);
+    //        newCellDate.appendChild(textNodeDate);
+    //        newCellWeight.appendChild(textNodeWeight);
+
+    //        _deliveryCount++;
+    //}
+
+    //function updateEditModal(){
+    //        $("#NewPackageName").attr("placeholder", currPackageName);
+    //        $("#NewPackageCity").attr("placeholder", currPackageCity);
+    //}
+        $(window).on('load', function () {
+
+            var limitReached = @((TempData["AddNewEmptyDelivery"] != null).ToString().ToLower());
+            if(limitReached == true){
+                alert('@TempData["AddNewEmptyDelivery"]');
             }
-            else if (id < _deliveryCount) {
-                tempDeliveries = tempDeliveries.filter(item => item.Id != id);
+        }
+        );
+
+        $("#submit-all-button").on("click", function(){
+            if ($("#Package_Name").val() == ''){
+                alert("Pole nazwy paczki nie może pozostać puste.");
+                return false;
             }
-            else {
-                throw new Error('requesting package with non-existing id');
-            }    
-    }
-
-    function updateLayoutDeliveriesTable(item){
-            var id = parseInt(item["Id"]);
-            $(`#delivery-cell-weight-id-${id}`).html(item.Weight);
-            $(`#delivery-cell-name-id-${id}`).html(item.Name);
-    }
-
-    function _updateDeliveries(arr, item) {
-        var id = item.Id;
-        var index = arr.findIndex(x => x.Id == id);
-        if (index == -1) {
-            throw new Error('no such id!');
-        }
-
-        arr[index].Name = item.Name;
-        arr[index].Weight = item.Weight;
-
-    }
-    function updateTempPackage(){
-        var formName = $("#NewPackageName").val();
-        var formCity = $("#NewPackageCity").val();
-         $("#NewPackageName").val("");
-         $("#NewPackageCity").val("");
-        if(formName != ""){
-            currPackageName = formName;
-                $("#curr-name").html(currPackageName);
-
-        }
-        if(formCity != ""){
-            currPackageCity = formCity;
-                $("#curr-city").html(currPackageCity);
-        }
-        updateEditModal();
-        $("#exampleModal").modal("hide");
-        
-        return false;   // bez submitu
-    }
-
-    function updateDeliveries(item){
-            var id = parseInt(item["Id"]);
-            _updateDeliveries(getDeliveryArrayByDeliveryId(id),item);
-            updateLayoutDeliveriesTable(item);
-    }
-    function loadFoundDeliveries(){
-            _foundDeliveryCount = parseInt('@maxId');
-            Object.freeze(_foundDeliveryCount);
-            _deliveryCount = _foundDeliveryCount + 1;
-            var json = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Query, new JsonSerializerOptions(){
-            ReferenceHandler = ReferenceHandler.IgnoreCycles
-            }));
-            _foundDeliveries = JSON.parse(JSON.stringify(json));
-    }
-
-    function saveTempDelivery(name, weight,tempID) {
-            tempDeliveries.push(new Delivery(name,weight,tempID));
-    }
-    function addTemporaryDelivery() {
-            var inputWeight = $("#delivery-weight").val();
-            var inputName = $("#delivery-name").val();
-            saveTempDelivery(inputName, inputWeight, _deliveryCount);
-
-            $("#delivery-weight").val("");
-            $("#delivery-name").val("");
-
-            var tbodyRef = document.getElementById('deliveryTable').getElementsByTagName('tbody')[0];
-            var newRow = tbodyRef.insertRow();
-
-            var newCellID = newRow.insertCell();
-            var newCellName = newRow.insertCell();
-            newCellName.id = `delivery-cell-name-id-${_deliveryCount}`;
-            var newCellDate = newRow.insertCell();
-            var newCellWeight = newRow.insertCell();
-            newCellWeight.id = `delivery-cell-weight-id-${_deliveryCount}`;
-            var newCellEdition = newRow.insertCell();
-            var newCellDelete = newRow.insertCell();
-
-            var textNodeID = document.createTextNode(_deliveryCount.toString());
-            var textNodeName = document.createTextNode(inputName);
-            var textNodeDate = document.createTextNode("teraz!");
-            var textNodeWeight = document.createTextNode(inputWeight);
-            newCellEdition.innerHTML =
-                `<a class="edit-delivery" style="cursor:pointer" data-id=${_deliveryCount}>Edytuj</a>`;
-
-            newCellDelete.innerHTML =
-                `<a class="delete-delivery" style="cursor:pointer" data-id=${_deliveryCount}>Usun</a>`;
-
-            newCellID.appendChild(textNodeID);
-            newCellName.appendChild(textNodeName);
-            newCellDate.appendChild(textNodeDate);
-            newCellWeight.appendChild(textNodeWeight);
-
-            _deliveryCount++;
-    }
-
-    function updateEditModal(){
-            $("#NewPackageName").attr("placeholder", currPackageName);
-            $("#NewPackageCity").attr("placeholder", currPackageCity);
-    }
-
-    //$(window).on('load',function(){ 
-    //        loadFoundDeliveries();
-    //        currPackageName = '@Model.Package.Name';
-    //        currPackageCity = '@Model.Package.DestinationCity';
-    //        currPackageData = { "Name": '@Model.Package.Name', "City": '@Model.Package.DestinationCity' };         
-    //        updateEditModal();
-    //});
-
-    //$("#deliveryTable").delegate("input[name^=Query[]", "change", function(){
-    //        alert("adadsa");
-    //})
+            return true;
+        })
 
         $("input[name^=Query]").on("change",function(){
             $(this).closest("tr").find("input[name$=IsModified]").val("True");
+        })
+
+        $("#curr-name,#curr-city").on("change", function(){
+            $("#IsPackageModified").val("True");
+        })
+
+        $(".deleteDeliveryButton").on("click", function(){
+            alert($(this).attr("id"));
+            $(this).closest("tr").find("input[name$=IsDeleted]").val("True");
+            //$("#submit-all-button").trigger("click");
+            $(this).closest("tr").hide();
+
         })
     
         function findDelivery(arr,id){
             return arr.find(element => element.Id == id);
         }
-
-    //$('#deliveryTable').delegate(".edit-delivery", "click", function () {
-    //    $("#delivery-modify").show();
-    //    var deliveryId = parseInt($(this).data("id"));
-    //    var delivery = findDelivery(getDeliveryArrayByDeliveryId(deliveryId),deliveryId);
-    //    //alert(deliveryId); alert(_deliveryCount);
-    //    $("#edit-delivery-name").val(delivery["Name"]);
-    //    $("#edit-delivery-weight").val(delivery["Weight"]);
-    //    $("#edit-delivery-id").val(deliveryId);
-
-    //});
-
-    //$('#deliveryTable').delegate(".delete-delivery", "click", function(){
-    //    var deliveryId = parseInt($(this).data("id"));
-    //    removeDeliveryFromArray(deliveryId);
-    //    $(this).parent().parent().remove();
-
-    //});
 
     $("#delivery-modify").on("submit", function(){
         var modifiedName = $("#edit-delivery-name").val();
@@ -307,23 +209,6 @@
         return false;   // nie chcemy submitowac, wszystko w jsie jest robione
     });
 
-    //$("#submit-all-button").on("click", function(){
-    //    //alert("submitting");
-    //    $("#NewPackageName").val(currPackageName);
-    //    $("#NewPackageCity").val(currPackageCity);
-    //    $("#JsonTempDeliveries").val(JSON.stringify(tempDeliveries));
-    //    $("#JsonStaticDeliveriesModified").val(JSON.stringify(modifiedFoundDeliveries));
-    //    $("#JsonStaticDeliveriesToDelete").val(JSON.stringify(toRemoveFoundDeliveriesIds));
-    //    return true;
-    //});
-
-    //$("#delivery-post-all").on('submit', function () {
-
-    //    //alert(JSON.stringify(tempDeliveries, ['Name', 'Weight']));
-    //    //alert(JSON.stringify(modifiedFoundDeliveries), ['Name','Weight','Id']);
-    //    //return false;
-    //    return true;
-    //});
 
     // nie pozwalaj robic submita enterem
     $(document).on("keydown", "form", function (event) {

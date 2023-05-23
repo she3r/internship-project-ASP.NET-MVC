@@ -15,8 +15,9 @@
             <tr>
                 <td>
                     @Html.HiddenFor(model => model[i].IsModified)
-                    @Html.HiddenFor(model => model[i].Id)
                     @Html.DisplayFor(model => model[i].Id)
+                    @Html.HiddenFor(model => model[i].Id)
+                    @Html.HiddenFor(model => model[i].IsDeleted)
                 </td>
                 <td>
 @*                    @Html.LabelFor(model => model[i].Name)*@
@@ -31,7 +32,7 @@
                     @Html.EditorFor(model => model[i].Weight)
                 </td>
                 <td>
-                    <a class="delete-delivery" style="cursor:pointer" asp-action="DeleteDelivery" asp-route-itemid="@Model[i].Id" >Usuń</a>
+                    <a id="delete-delivery-@i" class="deleteDeliveryButton" style="cursor:pointer">Usuń</a>
                 </td>
             </tr>
         }

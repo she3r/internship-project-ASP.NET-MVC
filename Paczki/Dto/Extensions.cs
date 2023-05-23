@@ -20,6 +20,7 @@ namespace Paczki.Dto
             return new()
             {
                 Id = delivery.Id,
+                PackageRefId = delivery.PackageRefId,
                 Name = delivery.Name,
                 Weight = delivery.Weight,
                 IsModified = false,

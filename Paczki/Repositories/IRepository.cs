@@ -23,6 +23,7 @@ namespace Paczki.Repositories
         bool DeletePackages(IEnumerable<int> ids);
         bool DeleteDelivery(int? id);
         bool DeleteDeliveries(IEnumerable<int> ids);
+        bool DeleteDeliveries(IEnumerable<DeliveryDtoWithId> deliveries);
 
         int GetNumOfPackages(bool countOpened=true, bool countClosed=true);
         int GetNumOfDeliveries();

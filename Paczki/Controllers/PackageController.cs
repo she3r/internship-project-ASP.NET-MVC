@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Paczki.Dto;
 using Paczki.Repositories;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using static System.Data.Entity.Infrastructure.Design.Executor;
 
 namespace Paczki.Controllers
 {
@@ -23,15 +24,21 @@ namespace Paczki.Controllers
             return View(GetDefaultIndexPackageContentsModelView());
         }
 
-        public IActionResult IndexWithPage(int numPage)
+        public IActionResult IndexWithPage(int numPage, bool showOpen=true, bool showClosed=true)
         {
+            var query = GetPage(numPage, showOpen, showClosed);
+            while((query is null || query.Count == 0) && numPage > 1)
+            {
+                query = GetPage(numPage - 1, showOpen, showClosed);
+                numPage--;
+            }
             return View("Index",new IndexPackageContentsModelView()
             {
-                Query = GetPage(numPage),
-                ShowOpen = true,
-                ShowClosed = false,
+                Query = query,
+                ShowOpen = showOpen,
+                ShowClosed = showClosed,
                 PageChoice = numPage,
-                NumOfAllPackages = _repository.GetNumOfPackages(),
+                NumOfAllPackages = _repository.GetNumOfPackages(showOpen,showClosed),
                 NumPackagesOnPage = numPackagesPerPage
             });
         }
@@ -134,16 +141,62 @@ namespace Paczki.Controllers
             {
                 return RedirectToAction("Index");
             }
-            IEnumerable<Delivery> query = _repository.GetPackageDeliveries(id).ToList();
+            List<Delivery> query = _repository.GetPackageDeliveries(id).ToList();
+            var queryDto = query.Select(d => d.AsDeliveryDtoWithId()).ToList();
+            queryDto.Add(new DeliveryDtoWithId() { Id = -1, Name = "" });
             var modelView = new EditPackageContentsModelView() {
                 Package = packageFromID,
-                Query = query.Select(d => d.AsDeliveryDtoWithId()).ToList(),
+                Query = queryDto,
                 SourceIndexPageNum = prevModelView.PageChoice,
                 SourceShowClosedPage = prevModelView.ShowClosed,
                 SourceShowOpenedPage = prevModelView.ShowOpen
             };
+
             return View(modelView);
         }
+        [HttpGet]
+        public IActionResult AddNewPackage(IndexPackageContentsModelView prevModelView, int id)
+        {
+            var packageToAdd = new Package()
+            {
+                PackageId = -1,
+                Name = ""
+            };
+            if (!prevModelView.ShowOpen)
+            {
+                id = 1;
+            }
+            var listOfDeliveriesWithOneDeliveryInputForStarters = new List<DeliveryDtoWithId>();
+            listOfDeliveriesWithOneDeliveryInputForStarters.Add(new DeliveryDtoWithId() { Id = -1 });
+            var modelView = new EditPackageContentsModelView()
+            {
+                Package = packageToAdd,
+                Query = listOfDeliveriesWithOneDeliveryInputForStarters,
+                SourceIndexPageNum = id,
+                SourceShowClosedPage = prevModelView.ShowClosed,
+                SourceShowOpenedPage = prevModelView.ShowOpen
+            };
+            return View("Edit", modelView);
+        }
+
+        [HttpGet]
+        public IActionResult AfterEdit(bool sourceShowOpenedPage, bool sourceShowClosedPage, int sourceIndexPageNum, int id)
+        {
+            IEnumerable<Delivery> query = _repository.GetPackageDeliveries(id).ToList();
+            var packageFromID = _repository.GetPackage(id);
+            var queryDto = query.Select(d => d.AsDeliveryDtoWithId()).ToList();
+            queryDto.Add(new DeliveryDtoWithId() { Name="", Id= -1 });
+            var modelView = new EditPackageContentsModelView()
+            {
+                Package = packageFromID,
+                Query = queryDto,
+                SourceIndexPageNum = sourceIndexPageNum,
+                SourceShowClosedPage = sourceShowClosedPage,
+                SourceShowOpenedPage = sourceShowOpenedPage
+            };
+            return View("Edit",modelView);
+        }
+
 
         private List<Package> GetPage(int pageChoice=1, bool showOpened=true, bool showClosed=true) {
             if (pageChoice < 1) throw new ArgumentException("page too low");
@@ -160,10 +213,6 @@ namespace Paczki.Controllers
             }
             
             page = page.Skip(skip).Take(take);
-            if (page.Count() < numPackagesPerPage && pageChoice > 1)
-            {
-                return GetPage(pageChoice - 1, showOpened, showClosed);
-            }
             return page.ToList();
         }
 
@@ -184,18 +233,14 @@ namespace Paczki.Controllers
         [HttpGet]
         public IActionResult TurnPage(IndexPackageContentsModelView modelView)
         {
-            modelView.Query = GetPage(modelView.PageChoice, modelView.ShowOpen,modelView.ShowClosed);
-            return View("Index", modelView);
+            //modelView.Query = GetPage(modelView.PageChoice, modelView.ShowOpen,modelView.ShowClosed);
+            return RedirectToAction("IndexWithPage", new { numPage=modelView.PageChoice, showOpen=modelView.ShowOpen, showClosed=modelView.ShowClosed });
         }
 
         [HttpGet]
         public IActionResult FilterPackages(IndexPackageContentsModelView modelView)
         {
-            modelView.Query = GetPage(modelView.PageChoice, modelView.ShowOpen, modelView.ShowClosed);
-            modelView.NumOfAllPackages = _repository.GetNumOfPackages(modelView.ShowOpen, modelView.ShowClosed);
-            modelView.NumPackagesOnPage = numPackagesPerPage;
-
-            return View("Index", modelView);
+            return RedirectToAction("TurnPage", modelView);
         }
 
         [HttpGet]
@@ -203,70 +248,35 @@ namespace Paczki.Controllers
         {
             return RedirectToAction("TurnPage", new IndexPackageContentsModelView()
             {
-                PageChoice = GetPackagePageNumByID(id),
-                Query = GetPage(GetPackagePageNumByID(id)),
-                ShowOpen = true,
-                ShowClosed = true,
-                NumOfAllPackages = GetNumOfAllPages(),
+                PageChoice = modelView.SourceIndexPageNum,
+                Query = GetPage(modelView.SourceIndexPageNum, modelView.SourceShowOpenedPage, modelView.SourceShowClosedPage),
+                ShowOpen = modelView.SourceShowOpenedPage,
+                ShowClosed = modelView.SourceShowClosedPage,
+                NumOfAllPackages = GetNumOfAllPages(modelView.SourceShowOpenedPage, modelView.SourceShowClosedPage),
                 NumPackagesOnPage = numPackagesPerPage
 
             });
         }
 
-
-        //private int GetPageFromPositionInDb(int position)
+        //private int GetPackagePageNumByID(int id)
         //{
-        //    var postsPerPage = numPackagesPerPage;
-        //    var numItTable = (position + 1) % postsPerPage;
-        //    var totalNumOfPackages = _repository.GetNumOfPackages();
-        //    var page = (_repository.GetNumOfPackages() - numItTable) / postsPerPage;
-        //    return page + 1;
+        //    int pos = _repository.GetPackagePosition(id) + 1;
+        //    int numOnPage = pos % numPackagesPerPage;
+        //    if(numOnPage == 0) { return pos / numPackagesPerPage; }
+        //    return pos / numPackagesPerPage + 1;
         //}
-
-        private int GetPackagePageNumByID(int id)
-        {
-            int pos = _repository.GetPackagePosition(id) + 1;
-            int numOnPage = pos % numPackagesPerPage;
-            if(numOnPage == 0) { return pos / numPackagesPerPage; }
-            return pos / numPackagesPerPage + 1;
-        }
-
-        //private IEnumerable<Package> GetPackagePageByID(int id)
-        //{
-        //    var numPage = GetPackagePageNumByID(id);
-        //    return GetPage(numPage);
-        //}
-
-        //[HttpPost]
-        //public IActionResult EditPackageOnly(EditPackageContentsModelView modelView)
-        //{
-        //    var package = modelView.Package;
-        //    if(package is null)
-        //    {
-        //        TempData["edit-result"] = "Nie udało się edytować paczki";
-        //    }
-        //    var id = package.PackageId;
-        //    var toEdit = new PackageDtoWithId()
-        //    {
-        //        Id = id,
-        //        Name = modelView.NewPackageName,
-        //        DestinationCity = modelView.NewPackageCity,
-        //        IsOpened = package.Opened
-        //    };
-        //    _repository.UpdatePackage(toEdit);
-        //    int page = GetPackagePageNumByID(id);
-        //    return View("Edit", id);
-        //}
+        [HttpPost]
         public IActionResult Delete(IndexPackageContentsModelView modelView,int? id)
         {
             if (id == null)
                 return BadRequest();
             _repository.DeletePackage(id);
-            modelView.NumOfAllPackages = _repository.GetNumOfPackages(modelView.ShowOpen, modelView.ShowClosed);
-            modelView.Query = GetPage(modelView.PageChoice, modelView.ShowOpen, modelView.ShowClosed);
-            return RedirectToAction("Index", modelView);
+            int currPage = modelView.PageChoice;
+            bool showOpen = modelView.ShowOpen;
+            bool showClosed = modelView.ShowClosed;
+            return RedirectToAction("IndexWithPage", new { numPage = currPage, showOpen = showOpen, showClosed = showClosed });
         }
-
+        [HttpPost]
         public IActionResult Open(IndexPackageContentsModelView modelView, int? id)
         {
             if (id == null)
@@ -280,10 +290,12 @@ namespace Paczki.Controllers
                 DestinationCity = packageFromId.DestinationCity
             };
             _repository.UpdatePackage(toUpdate);
-            modelView.Query = GetPage(modelView.PageChoice, modelView.ShowOpen, modelView.ShowClosed);
-            return View("Index", modelView);
+            int currPage = modelView.PageChoice;
+            bool showOpen = modelView.ShowOpen;
+            bool showClosed = modelView.ShowClosed;
+            return RedirectToAction("IndexWithPage", new { numPage = currPage, showOpen = showOpen, showClosed = showClosed });
         }
-
+        [HttpPost]
         public IActionResult Close(IndexPackageContentsModelView modelView, int? id)
         {
             if (id == null)
@@ -300,51 +312,104 @@ namespace Paczki.Controllers
             int currPage = modelView.PageChoice;
             bool showOpen = modelView.ShowOpen;
             bool showClosed = modelView.ShowClosed;
-            modelView.Query = GetPage(currPage, showOpen, showClosed);
-            return View("Index", modelView);
+            return RedirectToAction("IndexWithPage", new {numPage=currPage, showOpen = showOpen, showClosed = showClosed});
         }
 
-        //public IActionResult AddNewPackage()
-        //{
+        IList<DeliveryDtoWithId> GetDeliveriesToUpdateOrInsert(IEnumerable<DeliveryDtoWithId> deliveryList, int parentPackageId)
+        {
+            if(deliveryList != null)
+            {
+                return deliveryList.Where(delivery => delivery.IsModified).
+                    Select(delivery => { delivery.PackageRefId = parentPackageId; delivery.CreationDateTime = DateTime.Now; return delivery; }).ToList();
+            }
+            return new List<DeliveryDtoWithId>();
+        }
 
-        //}
+        IList<DeliveryDtoWithId> GetDeliveriesToDelete(IEnumerable<DeliveryDtoWithId> deliveryList, int parentPackageId)
+        {
+            if(deliveryList != null)
+            {
+                return deliveryList.Where(delivery => delivery.IsDeleted).
+                        Select(delivery => { delivery.PackageRefId = parentPackageId; return delivery; }).ToList();
+            }
+            return new List<DeliveryDtoWithId>();
+        }
 
-        // POST
+        List<DeliveryDtoWithId> ValidateDeliveriesToHandle(IList<DeliveryDtoWithId> deliveryList)
+        {
+            if (deliveryList != null)
+            {
+                return deliveryList.Where(d => d.Weight > 0 && d.Name != null && d.Name != "").ToList();
+            }
+            return new List<DeliveryDtoWithId>();
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult HandleEditDeliveries(EditPackageContentsModelView modelView)
         {
-            var packageID = modelView.Package.PackageId;
-            if (packageID <= 0)
+            int? packageID = modelView.Package?.PackageId;
+            if (packageID == null || packageID == 0 || modelView.Package?.Name == "" || modelView.Package?.Name is null)    // package name cannot be null or empty ""
             {
                 return BadRequest();
             }
+            modelView.Query = ValidateDeliveriesToHandle(modelView.Query);
+            if (packageID < 0)   // is the package new
+            {
+                var destinationCity = modelView.Package.DestinationCity == null ? "" : modelView.Package.DestinationCity;
+                var toCreatePackage = new Package()
+                {
+                    Name = modelView.Package.Name,
+                    DestinationCity = destinationCity
+                };
+                packageID = _repository.CreatePackage(toCreatePackage);
+            }
             if (modelView.IsPackageModified)
             {
-                _repository.UpdatePackage(new PackageDtoWithId()
+                var toUpdatePackage = new PackageDtoWithId()
                 {
-                    Id = packageID,
+                    Id = (int) packageID,
                     Name = modelView.Package.Name,
                     DestinationCity = modelView.Package.DestinationCity,
-                    IsOpened = true
-                });
+                    IsOpened = true,
+                };
+                _repository.UpdatePackage(toUpdatePackage);
+            }
+            if (modelView.Query.Any(delivery => delivery.IsDeleted))
+            {
+                var ToDelete = GetDeliveriesToDelete(modelView.Query, (int) packageID);
+                _repository.DeleteDeliveries(ToDelete);
+                modelView.Query = modelView.Query.Where(delivery => delivery.IsDeleted == false).ToList();
             }
             if (modelView.Query.Any(delivery => delivery.IsModified))
             {
-                modelView.Query = modelView.Query.Select(delivery => { delivery.PackageRefId = modelView.Package.PackageId; return delivery; }).ToList();
-                _repository.UpdateOrInsertDeliveries(modelView.Query);
+                var toUpdate = GetDeliveriesToUpdateOrInsert(modelView.Query, (int) packageID);
+                _repository.UpdateOrInsertDeliveries(toUpdate);
             }
-            modelView.Package = _repository.GetPackage(packageID);  // get freshly updated from db 
-            return View("Edit", modelView);
+            return RedirectToAction("AfterEdit", new {
+                sourceShowOpenedPage = modelView.SourceShowOpenedPage,
+                sourceShowClosedPage = modelView.SourceShowClosedPage,
+                sourceIndexPageNum = modelView.SourceIndexPageNum, id = (int) packageID
+            });
         }
 
+        [HttpGet]
         public IActionResult AddNewDelivery(EditPackageContentsModelView modelView)
         {
-            int tempId = modelView.Query.Max(delivery => delivery.Id) + 1;
-            modelView.Query.Add(new DeliveryDtoWithId() { IsModified = true, CreationDateTime=DateTime.Now, Name="",Weight=0, Id= tempId  });
-            return View("Edit", modelView);
+            int emptyDeliveryLimit = 10;
+            if(modelView.Query is null)
+            {
+                modelView.Query = new List<DeliveryDtoWithId>();
+            }
+            int countEmptyDeliveries = modelView.Query.Where(delivery => delivery.Id == -1).Count();
+            if (countEmptyDeliveries < emptyDeliveryLimit)
+            {
+                modelView.Query.Add(new DeliveryDtoWithId() { IsModified = true, Name = "", Id = -1 });
+                
+            }
+            else { TempData["AddNewEmptyDelivery"] = "Limit pustych przesylek to " + emptyDeliveryLimit.ToString(); }
+            return View("Edit", modelView); 
         }
-
         public IActionResult DeleteDelivery(EditPackageContentsModelView view, int? id) {
             if (id is not null)
             {
