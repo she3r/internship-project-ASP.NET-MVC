@@ -327,7 +327,7 @@
             isOpened = (isOpened == 'True');
             if(!isOpened){
                 alert("Nie można edytować zamkniętej paczki.");
-                $(this).addClass('disabled');
+                $(this).prop('disabled', true);
                 return false;
             }
             return true;

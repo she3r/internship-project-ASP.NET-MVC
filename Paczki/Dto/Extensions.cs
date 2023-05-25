@@ -28,5 +28,18 @@ namespace Paczki.Dto
 
             };
         }
+
+        public static SourceInfo AsSourceInfo(this EditPackageContentsModelView model)
+        {
+            return new()
+            {
+                IsPackageModified = model.IsPackageModified,
+                AreDeliveriesDeleted = model.AreDeliveriesDeleted,
+                SourceIndexPageNum = model.SourceIndexPageNum,
+                SourceShowOpenedPage = model.SourceShowOpenedPage,
+                SourceShowClosedPage = model.SourceShowClosedPage,
+                PackageId = model.Package?.PackageId
+            };
+        }
     }
 }

@@ -143,7 +143,7 @@ namespace Paczki.Controllers
             }
             List<Delivery> query = _repository.GetPackageDeliveries(id).ToList();
             var queryDto = query.Select(d => d.AsDeliveryDtoWithId()).ToList();
-            queryDto.Add(new DeliveryDtoWithId() { Id = -1, Name = "" });
+            //queryDto.Add(new DeliveryDtoWithId() { Id = -1, Name = "" });
             var modelView = new EditPackageContentsModelView() {
                 Package = packageFromID,
                 Query = queryDto,
@@ -167,7 +167,7 @@ namespace Paczki.Controllers
                 id = 1;
             }
             var listOfDeliveriesWithOneDeliveryInputForStarters = new List<DeliveryDtoWithId>();
-            listOfDeliveriesWithOneDeliveryInputForStarters.Add(new DeliveryDtoWithId() { Id = -1 });
+            //listOfDeliveriesWithOneDeliveryInputForStarters.Add(new DeliveryDtoWithId() { Id = -1 });
             var modelView = new EditPackageContentsModelView()
             {
                 Package = packageToAdd,
@@ -185,7 +185,7 @@ namespace Paczki.Controllers
             IEnumerable<Delivery> query = _repository.GetPackageDeliveries(id).ToList();
             var packageFromID = _repository.GetPackage(id);
             var queryDto = query.Select(d => d.AsDeliveryDtoWithId()).ToList();
-            queryDto.Add(new DeliveryDtoWithId() { Name="", Id= -1 });
+            //queryDto.Add(new DeliveryDtoWithId() { Name="", Id= -1 });
             var modelView = new EditPackageContentsModelView()
             {
                 Package = packageFromID,
@@ -393,7 +393,9 @@ namespace Paczki.Controllers
             });
         }
 
-        [HttpGet]
+
+
+        [HttpPost]
         public IActionResult AddNewDelivery(EditPackageContentsModelView modelView)
         {
             int emptyDeliveryLimit = 10;
@@ -401,15 +403,16 @@ namespace Paczki.Controllers
             {
                 modelView.Query = new List<DeliveryDtoWithId>();
             }
-            int countEmptyDeliveries = modelView.Query.Where(delivery => delivery.Id == -1).Count();
-            if (countEmptyDeliveries < emptyDeliveryLimit)
+            // get rid of non-empty deliveries
+            modelView.Query = modelView.Query.Where(delivery => (delivery.Id != -1 || (delivery.Name != null && delivery.Name != "" && delivery.Weight != 0))).ToList();
+            if (modelView.CountEmptyDeliveries >= emptyDeliveryLimit)
             {
-                modelView.Query.Add(new DeliveryDtoWithId() { IsModified = true, Name = "", Id = -1 });
-                
+                TempData["AddNewEmptyDelivery"] = "Limit pustych przesylek to " + emptyDeliveryLimit.ToString();
+                return View("Edit", modelView);
             }
-            else { TempData["AddNewEmptyDelivery"] = "Limit pustych przesylek to " + emptyDeliveryLimit.ToString(); }
-            return View("Edit", modelView); 
+            return View("Edit", modelView);
         }
+
         public IActionResult DeleteDelivery(EditPackageContentsModelView view, int? id) {
             if (id is not null)
             {

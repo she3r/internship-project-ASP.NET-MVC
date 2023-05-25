@@ -13,5 +13,16 @@ namespace Paczki.Models
         public int SourceIndexPageNum { get; set; } = 1;
         public bool SourceShowOpenedPage { get; set; } = true;
         public bool SourceShowClosedPage { get; set; } = true;
+        public int CountEmptyDeliveries { get; set; } = 1;
+    }
+
+    public class SourceInfo
+    {
+        public bool IsPackageModified { get; set; } = false;
+        public bool AreDeliveriesDeleted { get; set; } = false;
+        public int SourceIndexPageNum { get; set; } = 1;
+        public bool SourceShowOpenedPage { get; set; } = true;
+        public bool SourceShowClosedPage { get; set; } = true;
+        public int? PackageId;
     }
 }

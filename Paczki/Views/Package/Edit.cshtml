@@ -5,8 +5,10 @@
 @model EditPackageContentsModelView;
 @{
     ViewData["Title"] = "Edit";
-    var deliveryCount = 1;
     var maxId = getMaxId();
+
+    for(int i=0;i<Model.CountEmptyDeliveries;++i)
+        Model.Query.Add(new Paczki.Dto.DeliveryDtoWithId() { Id = -1 });
 
 }
 @functions{
@@ -21,10 +23,12 @@
     }
 }
 <form method="post">
+    @Html.HiddenFor(model => model.CountEmptyDeliveries)
     @Html.HiddenFor(model => model.SourceIndexPageNum)
     @Html.HiddenFor(model => model.SourceShowOpenedPage)
     @Html.HiddenFor(model => model.SourceShowClosedPage)
     @Html.HiddenFor(model => model.IsPackageModified)
+
 
 <h1>Formularz przesyłek</h1>
     <div class="float-start mb-3 mt-1">
@@ -77,7 +81,7 @@
 @*
     <input class="form-control" type="text" name="delivery-name" id="delivery-name" style="width:30%;display:inline-block" placeholder="Tu wpisz nazwę nowej przesyłki" />
     <input class="form-control" type="number" step="0.01" name="delivery-weight" id="delivery-weight" style="width:25%;display:inline-block" placeholder="Tu wpisz wagę nowej przesyłki" />*@
-    <button class="btn btn-secondary" type="submit" style="width:150px" formmethod="get" asp-action="AddNewDelivery">
+    <button class="btn btn-secondary" id="addNewDeliveryButton" type="submit" style="width:150px" formmethod="post" asp-action="AddNewDelivery">
         Dodaj nową przesyłkę
     </button>
 
@@ -188,6 +192,13 @@
             //$("#submit-all-button").trigger("click");
             $(this).closest("tr").hide();
 
+        })
+
+        $("#addNewDeliveryButton").on("click", function(){
+            var currEmptyDeliveriesCount = parseInt($("#CountEmptyDeliveries").val()) + 1;
+            if (currEmptyDeliveriesCount <= 10){
+                $("#CountEmptyDeliveries").val(currEmptyDeliveriesCount);
+            }
         })
     
         function findDelivery(arr,id){
