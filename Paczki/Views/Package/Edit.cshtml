@@ -81,11 +81,11 @@
 @*
     <input class="form-control" type="text" name="delivery-name" id="delivery-name" style="width:30%;display:inline-block" placeholder="Tu wpisz nazwę nowej przesyłki" />
     <input class="form-control" type="number" step="0.01" name="delivery-weight" id="delivery-weight" style="width:25%;display:inline-block" placeholder="Tu wpisz wagę nowej przesyłki" />*@
-    <button class="btn btn-secondary" id="addNewDeliveryButton" type="submit" style="width:150px" formmethod="post" asp-action="AddNewDelivery">
+    <button class="btn btn-secondary" id="addNewDeliveryButton" type="submit" style="width:200px" formmethod="post" asp-action="AddNewDelivery">
         Dodaj nową przesyłkę
     </button>
-
-    <button class="btn btn-primary float-end" type="submit" id="submit-all-button" asp-action="HandleEditDeliveries" style="width:200px">
+    <button class="btn btn-primary" id="resetButton" type="submit" style="width:100px; height:auto" formmethod="get" asp-action="ResetEditDeliveries">Resetuj</button>
+    <button class="btn btn-primary float-end" type="submit" id="submit-all-button" asp-action="HandleEditDeliveries" style="width:280px">
         Zatwierdź wszystkie zmiany
     </button>
 
@@ -175,7 +175,9 @@
                 alert("Pole nazwy paczki nie może pozostać puste.");
                 return false;
             }
-            return true;
+            else{
+                return confirm("Przesyłki z pustą nazwą lub wagą <0.01 nie zostaną dodane lub nadpisane. Czy na pewno chcesz kontynuować?")
+            }
         })
 
         $("input[name^=Query]").on("change",function(){
@@ -187,7 +189,7 @@
         })
 
         $(".deleteDeliveryButton").on("click", function(){
-            alert($(this).attr("id"));
+            //alert($(this).attr("id"));
             $(this).closest("tr").find("input[name$=IsDeleted]").val("True");
             //$("#submit-all-button").trigger("click");
             $(this).closest("tr").hide();

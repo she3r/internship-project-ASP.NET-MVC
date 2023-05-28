@@ -393,6 +393,22 @@ namespace Paczki.Controllers
             });
         }
 
+        [HttpGet]
+        public IActionResult ResetEditDeliveries(EditPackageContentsModelView modelView)
+        {
+            int? packageID = modelView.Package?.PackageId;
+            if (packageID == null || packageID == 0 || modelView.Package?.Name == "" || modelView.Package?.Name is null)    // package name cannot be null or empty ""
+            {
+                return BadRequest();
+            }
+            return RedirectToAction("AfterEdit", new
+            {
+                sourceShowOpenedPage = modelView.SourceShowOpenedPage,
+                sourceShowClosedPage = modelView.SourceShowClosedPage,
+                sourceIndexPageNum = modelView.SourceIndexPageNum,
+                id = (int)packageID
+            });
+        }
 
 
         [HttpPost]
