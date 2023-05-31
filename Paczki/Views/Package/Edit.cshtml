@@ -32,9 +32,6 @@
 
 <h1>Formularz przesyłek</h1>
     <div class="float-start mb-3 mt-1">
-@*        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-            Edytuj informacje o paczce
-        </button>*@
     </div>
     <div class="float-stop mb-3 mt-1"><button asp-action="GoBack" asp-route-id="@Model.Package.PackageId" formmethod="get"
         class="btn btn-secondary float-end">Powrót do listy paczek</button></div>
@@ -78,9 +75,6 @@
 
 </table>
 
-@*
-    <input class="form-control" type="text" name="delivery-name" id="delivery-name" style="width:30%;display:inline-block" placeholder="Tu wpisz nazwę nowej przesyłki" />
-    <input class="form-control" type="number" step="0.01" name="delivery-weight" id="delivery-weight" style="width:25%;display:inline-block" placeholder="Tu wpisz wagę nowej przesyłki" />*@
     <button class="btn btn-secondary" id="addNewDeliveryButton" type="submit" style="width:200px" formmethod="post" asp-action="AddNewDelivery">
         Dodaj nową przesyłkę
     </button>
@@ -92,75 +86,19 @@
 
 @Html.EditorFor(model => model.Query,"_ListDeliveryEditor")
 </form>
-@*<form action="javascript:void(0);" id="delivery-modify" style="width:100%; display:none">
-    <input class="form-control" type="text" id="edit-delivery-name" style="width:30%;display:inline-block" />
-    <input class="form-control" type="number" step="0.01" id="edit-delivery-weight" style="width:25%;display:inline-block"/>
-    <input type="hidden" id="edit-delivery-id" value="" />
-    <button class="btn btn-primary" type="submit" style="width:150px" id="edit-delivery-accept">
-        Zatwierdź zmianę
-    </button>
-    <button class="btn btn-primary" style="width:150px" id="edit-delivery-decline">
-        Anuluj
-    </button>*@
 
 @section Scripts{
 
 <script type="text/javascript">
-    var _foundDeliveryCount;
-    var _deliveryCount;
-    var tempDeliveries = [];
-    var _foundDeliveries;
-    var modifiedFoundDeliveries = [];
-    var toRemoveFoundDeliveriesIds = [];
-    var currPackageName;
-    var currPackageCity;
+    //var _foundDeliveryCount;
+    //var _deliveryCount;
+    //var tempDeliveries = [];
+    //var _foundDeliveries;
+    //var modifiedFoundDeliveries = [];
+    //var toRemoveFoundDeliveriesIds = [];
+    //var currPackageName;
+    //var currPackageCity;
 
-
-    //function saveTempDelivery(name, weight,tempID) {
-    //        tempDeliveries.push(new Delivery(name,weight,tempID));
-    //}
-    //function addTemporaryDelivery() {
-    //        var inputWeight = $("#delivery-weight").val();
-    //        var inputName = $("#delivery-name").val();
-    //        saveTempDelivery(inputName, inputWeight, _deliveryCount);
-
-    //        $("#delivery-weight").val("");
-    //        $("#delivery-name").val("");
-
-    //        var tbodyRef = document.getElementById('deliveryTable').getElementsByTagName('tbody')[0];
-    //        var newRow = tbodyRef.insertRow();
-
-    //        var newCellID = newRow.insertCell();
-    //        var newCellName = newRow.insertCell();
-    //        newCellName.id = `delivery-cell-name-id-${_deliveryCount}`;
-    //        var newCellDate = newRow.insertCell();
-    //        var newCellWeight = newRow.insertCell();
-    //        newCellWeight.id = `delivery-cell-weight-id-${_deliveryCount}`;
-    //        var newCellEdition = newRow.insertCell();
-    //        var newCellDelete = newRow.insertCell();
-
-    //        var textNodeID = document.createTextNode(_deliveryCount.toString());
-    //        var textNodeName = document.createTextNode(inputName);
-    //        var textNodeDate = document.createTextNode("teraz!");
-    //        var textNodeWeight = document.createTextNode(inputWeight);
-    //        newCellEdition.innerHTML =
-    //            `<a class="edit-delivery" style="cursor:pointer" data-id=${_deliveryCount}>Edytuj</a>`;
-
-    //        newCellDelete.innerHTML =
-    //            `<a class="delete-delivery" style="cursor:pointer" data-id=${_deliveryCount}>Usun</a>`;
-
-    //        newCellID.appendChild(textNodeID);
-    //        newCellName.appendChild(textNodeName);
-    //        newCellDate.appendChild(textNodeDate);
-    //        newCellWeight.appendChild(textNodeWeight);
-
-    //        _deliveryCount++;
-    //}
-
-    //function updateEditModal(){
-    //        $("#NewPackageName").attr("placeholder", currPackageName);
-    //        $("#NewPackageCity").attr("placeholder", currPackageCity);
-    //}
         $(window).on('load', function () {
 
             var limitReached = @((TempData["AddNewEmptyDelivery"] != null).ToString().ToLower());
@@ -175,9 +113,10 @@
                 alert("Pole nazwy paczki nie może pozostać puste.");
                 return false;
             }
-            else{
-                return confirm("Przesyłki z pustą nazwą lub wagą <0.01 nie zostaną dodane lub nadpisane. Czy na pewno chcesz kontynuować?")
-            }
+            //else{
+            //    return confirm("Przesyłki z pustą nazwą lub wagą <0.01 nie zostaną dodane lub nadpisane. Czy na pewno chcesz kontynuować?")
+            //}
+            return true;
         })
 
         $("input[name^=Query]").on("change",function(){
@@ -203,24 +142,24 @@
             }
         })
     
-        function findDelivery(arr,id){
-            return arr.find(element => element.Id == id);
-        }
+        //function findDelivery(arr,id){
+        //    return arr.find(element => element.Id == id);
+        //}
 
-    $("#delivery-modify").on("submit", function(){
-        var modifiedName = $("#edit-delivery-name").val();
-        var modifiedWeight = $("#edit-delivery-weight").val();
-        var deliveryId = $("#edit-delivery-id").val();
-        //alert("curr delivery id=" + deliveryId);
-        if (modifiedName != "" && modifiedWeight != "") {
-            modifiedFoundDeliveries.push(new Delivery(modifiedName,modifiedWeight,deliveryId));
-        }
-        updateDeliveries(new Delivery(modifiedName,modifiedWeight,deliveryId));
-        $("#edit-delivery-name").val("");
-        $("#edit-delivery-weight").val("");
-        $("#delivery-modify").css("display","none");
-        return false;   // nie chcemy submitowac, wszystko w jsie jest robione
-    });
+    //$("#delivery-modify").on("submit", function(){
+    //    var modifiedName = $("#edit-delivery-name").val();
+    //    var modifiedWeight = $("#edit-delivery-weight").val();
+    //    var deliveryId = $("#edit-delivery-id").val();
+    //    //alert("curr delivery id=" + deliveryId);
+    //    if (modifiedName != "" && modifiedWeight != "") {
+    //        modifiedFoundDeliveries.push(new Delivery(modifiedName,modifiedWeight,deliveryId));
+    //    }
+    //    updateDeliveries(new Delivery(modifiedName,modifiedWeight,deliveryId));
+    //    $("#edit-delivery-name").val("");
+    //    $("#edit-delivery-weight").val("");
+    //    $("#delivery-modify").css("display","none");
+    //    return false;   // nie chcemy submitowac, wszystko w jsie jest robione
+    //});
 
 
     // nie pozwalaj robic submita enterem

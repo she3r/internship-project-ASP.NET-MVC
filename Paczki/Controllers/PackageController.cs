@@ -43,11 +43,11 @@ namespace Paczki.Controllers
             });
         }
 
-        // GET
-        public IActionResult Create()
-        {
-            return View();
-        }
+        //// GET
+        //public IActionResult Create()
+        //{
+        //    return View();
+        //}
 
         private IndexPackageContentsModelView GetDefaultIndexPackageContentsModelView()
         {
@@ -62,67 +62,67 @@ namespace Paczki.Controllers
             };
         }
 
-        private IEnumerable<Package> GetTempPackagesDeserialized(string? jsonTempPackages)
-        {
-            if(jsonTempPackages is null || jsonTempPackages == "") { 
-                return Enumerable.Empty<Package>();
-            }
-            var jsonTempDeliveriesDeserialized = JsonConvert.DeserializeObject<List<PackageDtoWithId>>(jsonTempPackages);
-            var packages = new List<Package>();
-            foreach(var dto in jsonTempDeliveriesDeserialized)
-            {
-                var city = dto.DestinationCity == null ? "" : dto.DestinationCity;
-                packages.Add(new Package()
-                {
-                    Name=dto.Name,
-                    Opened=true,
-                    CreationDateTime=DateTime.Now,
-                    DestinationCity= city,
+        //private IEnumerable<Package> GetTempPackagesDeserialized(string? jsonTempPackages)
+        //{
+        //    if(jsonTempPackages is null || jsonTempPackages == "") { 
+        //        return Enumerable.Empty<Package>();
+        //    }
+        //    var jsonTempDeliveriesDeserialized = JsonConvert.DeserializeObject<List<PackageDtoWithId>>(jsonTempPackages);
+        //    var packages = new List<Package>();
+        //    foreach(var dto in jsonTempDeliveriesDeserialized)
+        //    {
+        //        var city = dto.DestinationCity == null ? "" : dto.DestinationCity;
+        //        packages.Add(new Package()
+        //        {
+        //            Name=dto.Name,
+        //            Opened=true,
+        //            CreationDateTime=DateTime.Now,
+        //            DestinationCity= city,
 
-                });
-            }
-            return packages;
-        }
+        //        });
+        //    }
+        //    return packages;
+        //}
 
-        private IEnumerable<PackageDtoWithId> GetUpdateOpenPackagesDeserialized(string? jsonUpdatePackages)
-        {
-            if (jsonUpdatePackages is null || jsonUpdatePackages == "")
-            {
-                return Enumerable.Empty<PackageDtoWithId>();
-            }
-            var jsonTempDeliveriesDeserialized = JsonConvert.DeserializeObject<List<PackageDtoUpdateOpen>>(jsonUpdatePackages);
-            var packages = new List<PackageDtoWithId>();
-            foreach (var dto in jsonTempDeliveriesDeserialized)
-            {
-                packages.Add(new PackageDtoWithId()
-                {
-                    Id=dto.Id,
-                    Name = null,
-                    IsOpened = dto.IsOpened,
-                    DestinationCity=null
+        //private IEnumerable<PackageDtoWithId> GetUpdateOpenPackagesDeserialized(string? jsonUpdatePackages)
+        //{
+        //    if (jsonUpdatePackages is null || jsonUpdatePackages == "")
+        //    {
+        //        return Enumerable.Empty<PackageDtoWithId>();
+        //    }
+        //    var jsonTempDeliveriesDeserialized = JsonConvert.DeserializeObject<List<PackageDtoUpdateOpen>>(jsonUpdatePackages);
+        //    var packages = new List<PackageDtoWithId>();
+        //    foreach (var dto in jsonTempDeliveriesDeserialized)
+        //    {
+        //        packages.Add(new PackageDtoWithId()
+        //        {
+        //            Id=dto.Id,
+        //            Name = null,
+        //            IsOpened = dto.IsOpened,
+        //            DestinationCity=null
 
-                });
-            }
-            return packages;
-        }
+        //        });
+        //    }
+        //    return packages;
+        //}
 
-        private IEnumerable<int> GetDeletePackagesDeserialized(string? jsonDeletePackagesIDs)
-        {
-            if (jsonDeletePackagesIDs is null || jsonDeletePackagesIDs == "")
-            {
-                return Enumerable.Empty<int>();
-            }
-            return JsonConvert.DeserializeObject<List<int>>(jsonDeletePackagesIDs);
-        }
+        //private IEnumerable<int> GetDeletePackagesDeserialized(string? jsonDeletePackagesIDs)
+        //{
+        //    if (jsonDeletePackagesIDs is null || jsonDeletePackagesIDs == "")
+        //    {
+        //        return Enumerable.Empty<int>();
+        //    }
+        //    return JsonConvert.DeserializeObject<List<int>>(jsonDeletePackagesIDs);
+        //}
 
-        // POST
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult HandleEditPackages(IndexPackageContentsModelView modelView)
-        {
+        //// POST
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public IActionResult HandleEditPackages(IndexPackageContentsModelView modelView)
+        //{
             
-            return RedirectToAction("TurnPage", modelView);
-        }
+        //    return RedirectToAction("TurnPage", modelView);
+        //}
     
         [HttpGet]
         public IActionResult Edit(IndexPackageContentsModelView prevModelView, int? id)
@@ -281,15 +281,8 @@ namespace Paczki.Controllers
         {
             if (id == null)
                 return BadRequest();
-            var packageFromId = _repository.GetPackage(id);
-            var toUpdate = new PackageDtoWithId()
-            {
-                Id = packageFromId.PackageId,
-                Name = packageFromId.Name,
-                IsOpened = true,
-                DestinationCity = packageFromId.DestinationCity
-            };
-            _repository.UpdatePackage(toUpdate);
+            var toOpen = _repository.GetPackage(id);
+            _repository.UpdateOpenPackage(toOpen);
             int currPage = modelView.PageChoice;
             bool showOpen = modelView.ShowOpen;
             bool showClosed = modelView.ShowClosed;
@@ -300,22 +293,15 @@ namespace Paczki.Controllers
         {
             if (id == null)
                 return BadRequest();
-            var packageFromId = _repository.GetPackage(id);
-            var toUpdate = new PackageDtoWithId()
-            {
-                Id = packageFromId.PackageId,
-                Name = packageFromId.Name,
-                IsOpened = false,
-                DestinationCity = packageFromId.DestinationCity
-            };
-            _repository.UpdatePackage(toUpdate);
+            var toClose = _repository.GetPackage(id);
+            _repository.UpdateClosePackage(toClose);
             int currPage = modelView.PageChoice;
             bool showOpen = modelView.ShowOpen;
             bool showClosed = modelView.ShowClosed;
             return RedirectToAction("IndexWithPage", new {numPage=currPage, showOpen = showOpen, showClosed = showClosed});
         }
 
-        IList<DeliveryDtoWithId> GetDeliveriesToUpdateOrInsert(IEnumerable<DeliveryDtoWithId> deliveryList, int parentPackageId)
+        List<DeliveryDtoWithId> GetDeliveriesToUpdateOrInsert(IEnumerable<DeliveryDtoWithId> deliveryList, int parentPackageId)
         {
             if(deliveryList != null)
             {
@@ -325,7 +311,7 @@ namespace Paczki.Controllers
             return new List<DeliveryDtoWithId>();
         }
 
-        IList<DeliveryDtoWithId> GetDeliveriesToDelete(IEnumerable<DeliveryDtoWithId> deliveryList, int parentPackageId)
+        List<DeliveryDtoWithId> GetDeliveriesToDelete(IEnumerable<DeliveryDtoWithId> deliveryList, int parentPackageId)
         {
             if(deliveryList != null)
             {
@@ -335,11 +321,11 @@ namespace Paczki.Controllers
             return new List<DeliveryDtoWithId>();
         }
 
-        List<DeliveryDtoWithId> ValidateDeliveriesToHandle(IList<DeliveryDtoWithId> deliveryList)
+        List<DeliveryDtoWithId> RemoveEmptyDeliveries(IList<DeliveryDtoWithId> deliveryList)
         {
             if (deliveryList != null)
             {
-                return deliveryList.Where(d => d.Weight > 0 && d.Name != null && d.Name != "").ToList();
+                return deliveryList.Where(d => d.Weight > 0 && !string.IsNullOrEmpty(d.Name)).ToList();
             }
             return new List<DeliveryDtoWithId>();
         }
@@ -349,43 +335,32 @@ namespace Paczki.Controllers
         public IActionResult HandleEditDeliveries(EditPackageContentsModelView modelView)
         {
             int? packageID = modelView.Package?.PackageId;
-            if (packageID == null || packageID == 0 || modelView.Package?.Name == "" || modelView.Package?.Name is null)    // package name cannot be null or empty ""
+            if (packageID == null || packageID == 0 || string.IsNullOrEmpty(modelView.Package.Name))    // package name cannot be null or empty ""
             {
                 return BadRequest();
             }
-            modelView.Query = ValidateDeliveriesToHandle(modelView.Query);
+            modelView.Query = RemoveEmptyDeliveries(modelView.Query);
+            DbHandleEditDeliveries dbHandleEditDeliveriesDto = new DbHandleEditDeliveries();
             if (packageID < 0)   // is the package new
             {
-                var destinationCity = modelView.Package.DestinationCity == null ? "" : modelView.Package.DestinationCity;
-                var toCreatePackage = new Package()
-                {
-                    Name = modelView.Package.Name,
-                    DestinationCity = destinationCity
-                };
-                packageID = _repository.CreatePackage(toCreatePackage);
+                dbHandleEditDeliveriesDto.PackageToAdd = modelView.Package;
             }
             if (modelView.IsPackageModified)
             {
-                var toUpdatePackage = new PackageDtoWithId()
-                {
-                    Id = (int) packageID,
-                    Name = modelView.Package.Name,
-                    DestinationCity = modelView.Package.DestinationCity,
-                    IsOpened = true,
-                };
-                _repository.UpdatePackage(toUpdatePackage);
+                dbHandleEditDeliveriesDto.PackageUpdated = modelView.Package;
             }
             if (modelView.Query.Any(delivery => delivery.IsDeleted))
             {
-                var ToDelete = GetDeliveriesToDelete(modelView.Query, (int) packageID);
-                _repository.DeleteDeliveries(ToDelete);
+                dbHandleEditDeliveriesDto.DeliveriesToDelete = GetDeliveriesToDelete(modelView.Query, (int)packageID);
                 modelView.Query = modelView.Query.Where(delivery => delivery.IsDeleted == false).ToList();
+
             }
             if (modelView.Query.Any(delivery => delivery.IsModified))
-            {
-                var toUpdate = GetDeliveriesToUpdateOrInsert(modelView.Query, (int) packageID);
-                _repository.UpdateOrInsertDeliveries(toUpdate);
-            }
+                dbHandleEditDeliveriesDto.DeliveriesToInsertOrUpdate = GetDeliveriesToUpdateOrInsert(modelView.Query, (int)packageID);
+
+            int tmpPackageID = _repository.TransactEditView(dbHandleEditDeliveriesDto);
+            if(tmpPackageID > 0)
+                packageID = tmpPackageID;
             return RedirectToAction("AfterEdit", new {
                 sourceShowOpenedPage = modelView.SourceShowOpenedPage,
                 sourceShowClosedPage = modelView.SourceShowClosedPage,
@@ -397,10 +372,10 @@ namespace Paczki.Controllers
         public IActionResult ResetEditDeliveries(EditPackageContentsModelView modelView)
         {
             int? packageID = modelView.Package?.PackageId;
-            if (packageID == null || packageID == 0 || modelView.Package?.Name == "" || modelView.Package?.Name is null)    // package name cannot be null or empty ""
-            {
+            if (packageID < 0)
+                return RedirectToAction("Index");
+            if (packageID == null || packageID == 0 || string.IsNullOrEmpty(modelView?.Package?.Name))    // package name cannot be null or empty ""
                 return BadRequest();
-            }
             return RedirectToAction("AfterEdit", new
             {
                 sourceShowOpenedPage = modelView.SourceShowOpenedPage,
@@ -409,7 +384,6 @@ namespace Paczki.Controllers
                 id = (int)packageID
             });
         }
-
 
         [HttpPost]
         public IActionResult AddNewDelivery(EditPackageContentsModelView modelView)

@@ -10,92 +10,126 @@ namespace Paczki.Repositories
         {
             _db = db;
         }
-        public bool CreateDelivery(Delivery delivery)
+        //public bool CreateDelivery(Delivery delivery)
+        //{
+        //    _db.Deliveries.Add(delivery);
+        //    _db.SaveChanges();
+        //    return true;
+        //}
+        //public bool CreateDeliveries(IEnumerable<Delivery> deliveryList)
+        //{
+        //    deliveryList.ToList().ForEach(delivery =>  _db.Deliveries.Add(delivery));
+        //    _db.SaveChanges();
+        //    return true;
+        //}
+        //public bool CreatePackages(IEnumerable<Package> packageList)
+        //{
+        //    packageList.ToList().ForEach(package => _db.Packages.Add(package));
+        //    _db.SaveChanges();
+        //    return true;
+        //}
+        public bool UpdateClosePackage(Package toClose)
         {
-            _db.Deliveries.Add(delivery);
-            _db.SaveChanges();
-            return true;
-        }
-        public bool CreateDeliveries(IEnumerable<Delivery> deliveryList)
-        {
-            deliveryList.ToList().ForEach(delivery =>  _db.Deliveries.Add(delivery));
-            _db.SaveChanges();
-            return true;
-        }
-        public bool CreatePackages(IEnumerable<Package> packageList)
-        {
-            packageList.ToList().ForEach(package => _db.Packages.Add(package));
-            _db.SaveChanges();
-            return true;
-        }
-        public bool UpdateClosePackage(PackageDtoWithId packageDto)
-        {
-            Package? toUpdate = _db.Packages.Where(p => p.PackageId == packageDto.Id).FirstOrDefault();
-            if (toUpdate == null)
+            if (toClose == null)
             {
                 return false;
             }
-            UpdateDateTime(toUpdate, packageDto);
-            toUpdate.Name = packageDto.Name is null ? toUpdate.Name : packageDto.Name;
-            toUpdate.Opened = packageDto.IsOpened;
-            toUpdate.DestinationCity = packageDto.DestinationCity is null ? toUpdate.DestinationCity : packageDto.DestinationCity;
-            toUpdate.ClosedDateTime = DateTime.Now;
+            toClose.Opened = false;
+            UpdatePackage(toClose);
             _db.SaveChanges();
             return true;
         }
-        bool IRepository.UpdateDelivery(DeliveryDtoWithId delivery)
+        public bool UpdateOpenPackage(Package toOpen)
         {
-
-            Delivery? toUpdate = _db.Deliveries.Where(d => d.Id == delivery.Id).FirstOrDefault();
-            if (toUpdate == null)
+            if (toOpen == null)
             {
                 return false;
             }
-
-            toUpdate.Name = delivery.Name;
-            toUpdate.Weight = delivery.Weight;
+            toOpen.Opened = true;
+            UpdatePackage(toOpen);
             _db.SaveChanges();
             return true;
+        }
+
+        //bool IRepository.UpdateDelivery(DeliveryDtoWithId delivery)
+        //{
+
+        //    Delivery? toUpdate = _db.Deliveries.Where(d => d.Id == delivery.Id).FirstOrDefault();
+        //    if (toUpdate == null)
+        //    {
+        //        return false;
+        //    }
+
+        //    toUpdate.Name = delivery.Name;
+        //    toUpdate.Weight = delivery.Weight;
+        //    _db.SaveChanges();
+        //    return true;
             
-        }
+        //}
 
-        public bool UpdatePackages(IEnumerable<PackageDtoWithId> packageList)
+        //public bool UpdatePackages(IEnumerable<PackageDtoWithId> packageList)
+        //{
+        //    foreach (var package in packageList)
+        //    {
+        //        Package? toUpdate = _db.Packages.Where(d => d.PackageId == package.Id).FirstOrDefault();
+        //        if (toUpdate == null)
+        //        {
+        //            return false;
+        //        }
+
+        //        toUpdate.Name = package.Name is null ? toUpdate.Name : package.Name;
+        //        toUpdate.DestinationCity = package.DestinationCity is null ? toUpdate.DestinationCity : package.DestinationCity;
+        //        if(toUpdate.Opened != package.IsOpened && package.IsOpened == false)
+        //        {
+        //            toUpdate.ClosedDateTime = DateTime.Now;
+        //        }
+        //        toUpdate.Opened = package.IsOpened;
+        //    }
+        //    _db.SaveChanges();
+        //    return true;
+        //}
+        //bool IRepository.UpdateDeliveries(IEnumerable<DeliveryDtoWithId> deliveryList)
+        //{
+        //    foreach (var delivery in deliveryList)
+        //    {
+        //        if (!delivery.IsModified) { continue; }
+        //        Delivery? toUpdate = _db.Deliveries.Where(d => d.Id == delivery.Id).FirstOrDefault();
+        //        if (toUpdate == null)
+        //        {
+        //            return false;
+        //        }
+
+        //        toUpdate.Name = delivery.Name;
+        //        toUpdate.Weight = delivery.Weight;
+        //    }
+        //    _db.SaveChanges();
+        //    return true;
+        //}
+
+        public int TransactEditView(DbHandleEditDeliveries dbHandleEditDeliveries)
         {
-            foreach (var package in packageList)
+            int packageID = 0;
+            if(dbHandleEditDeliveries.PackageToAdd != null)
             {
-                Package? toUpdate = _db.Packages.Where(d => d.PackageId == package.Id).FirstOrDefault();
-                if (toUpdate == null)
-                {
-                    return false;
-                }
-
-                toUpdate.Name = package.Name is null ? toUpdate.Name : package.Name;
-                toUpdate.DestinationCity = package.DestinationCity is null ? toUpdate.DestinationCity : package.DestinationCity;
-                if(toUpdate.Opened != package.IsOpened && package.IsOpened == false)
-                {
-                    toUpdate.ClosedDateTime = DateTime.Now;
-                }
-                toUpdate.Opened = package.IsOpened;
+                packageID = CreatePackage(dbHandleEditDeliveries.PackageToAdd);
+            }
+            if (dbHandleEditDeliveries.PackageUpdated != null)
+            {
+                bool resultUpdatePackage = UpdatePackage(dbHandleEditDeliveries.PackageUpdated);
+                if (!resultUpdatePackage) return -2;
+            }
+            if(dbHandleEditDeliveries.DeliveriesToDelete.Count() > 0)
+            {
+                bool resultDeleteDeliveries = DeleteDeliveries(dbHandleEditDeliveries.DeliveriesToDelete);
+                if (!resultDeleteDeliveries) return -2;
+            }
+            if(dbHandleEditDeliveries.DeliveriesToInsertOrUpdate.Count() > 0)
+            {
+                bool resultUpdateOrInsertDeliveries = UpdateOrInsertDeliveries(dbHandleEditDeliveries.DeliveriesToInsertOrUpdate);
+                if (!resultUpdateOrInsertDeliveries) return -2;
             }
             _db.SaveChanges();
-            return true;
-        }
-        bool IRepository.UpdateDeliveries(IEnumerable<DeliveryDtoWithId> deliveryList)
-        {
-            foreach (var delivery in deliveryList)
-            {
-                if (!delivery.IsModified) { continue; }
-                Delivery? toUpdate = _db.Deliveries.Where(d => d.Id == delivery.Id).FirstOrDefault();
-                if (toUpdate == null)
-                {
-                    return false;
-                }
-
-                toUpdate.Name = delivery.Name;
-                toUpdate.Weight = delivery.Weight;
-            }
-            _db.SaveChanges();
-            return true;
+            return packageID;
         }
 
         public bool UpdateOrInsertDeliveries(IEnumerable<DeliveryDtoWithId> deliveryList)
@@ -103,8 +137,7 @@ namespace Paczki.Repositories
             foreach(var delivery in deliveryList)
             {
                 if (!delivery.IsModified) { continue; }
-                Delivery? toUpdate = _db.Deliveries.Where(d => d.Id == delivery.Id && d.PackageRefId == d.PackageRefId &&
-                    d.Name == delivery.Name && d.Weight == delivery.Weight).FirstOrDefault();
+                Delivery? toUpdate = _db.Deliveries.Where(d => d.Id == delivery.Id && d.PackageRefId == d.PackageRefId).FirstOrDefault();
                 if(toUpdate == null && _db.Packages.Any(p => p.PackageId == delivery.PackageRefId)) {
                     var toCreate = new Delivery()
                     {
@@ -122,13 +155,13 @@ namespace Paczki.Repositories
                     toUpdate.Weight = delivery.Weight;
                 }
             }
-            _db.SaveChanges();
+            //_db.SaveChanges();
             return true;
         }
         public int CreatePackage(Package package)
         {
             _db.Packages.Add(package);
-            _db.SaveChanges();
+            //_db.SaveChanges();
 
             return package.PackageId;
         }
@@ -153,29 +186,29 @@ namespace Paczki.Repositories
             return _db.Deliveries.Where(delivery => delivery.PackageRefId == id).ToList();
         }
 
-        public bool DeleteDelivery(int? id)
-        {
-            if (id == null) return false;
-            var toDelete = new Delivery() { Id = (int)id };
-            _db.Deliveries.Attach(toDelete);
-            _db.Deliveries.Remove(toDelete);
-            _db.SaveChanges();
-            return true;    
+        //public bool DeleteDelivery(int? id)
+        //{
+        //    if (id == null) return false;
+        //    var toDelete = new Delivery() { Id = (int)id };
+        //    _db.Deliveries.Attach(toDelete);
+        //    _db.Deliveries.Remove(toDelete);
+        //    _db.SaveChanges();
+        //    return true;    
 
-        }
+        //}
 
-        public bool DeleteDeliveries(IEnumerable<int> ids)
-        {
-            foreach(var id in ids)
-            {
-                if (id == null) return false;
-                var toDelete = new Delivery() { Id = (int) id };
-                _db.Deliveries.Attach(toDelete);
-                _db.Deliveries.Remove(toDelete);              
-            }
-            _db.SaveChanges();
-            return true;
-        }
+        //public bool DeleteDeliveries(IEnumerable<int> ids)
+        //{
+        //    foreach(var id in ids)
+        //    {
+        //        if (id == null) return false;
+        //        var toDelete = new Delivery() { Id = (int) id };
+        //        _db.Deliveries.Attach(toDelete);
+        //        _db.Deliveries.Remove(toDelete);              
+        //    }
+        //    _db.SaveChanges();
+        //    return true;
+        //}
 
         public bool DeleteDeliveries(IEnumerable<DeliveryDtoWithId> deliveries)
         {
@@ -188,31 +221,31 @@ namespace Paczki.Repositories
                     _db.Deliveries.Remove(toRemove);
                 }
             }
-            _db.SaveChanges();
+            //_db.SaveChanges();
             return true;
         }
-        public bool DeleteDeliveries(IEnumerable<Delivery> deliveries)
-        {
-            foreach (var d in deliveries)
-            {
-                if (d == null) return false;
-                _db.Deliveries.Attach(d);
-                _db.Deliveries.Remove(d);
-                _db.SaveChanges();
-            }
-            return true;
-        }
-        public bool DeletePackages(IEnumerable<int> ids)
-        {
-            foreach (var id in ids)
-            {
-                var toDelete = new Package() { PackageId = id };
-                _db.Packages.Attach(toDelete);
-                _db.Packages.Remove(toDelete);              
-            }
-            _db.SaveChanges();
-            return true;
-        }
+        //public bool DeleteDeliveries(IEnumerable<Delivery> deliveries)
+        //{
+        //    foreach (var d in deliveries)
+        //    {
+        //        if (d == null) return false;
+        //        _db.Deliveries.Attach(d);
+        //        _db.Deliveries.Remove(d);
+        //        _db.SaveChanges();
+        //    }
+        //    return true;
+        //}
+        //public bool DeletePackages(IEnumerable<int> ids)
+        //{
+        //    foreach (var id in ids)
+        //    {
+        //        var toDelete = new Package() { PackageId = id };
+        //        _db.Packages.Attach(toDelete);
+        //        _db.Packages.Remove(toDelete);              
+        //    }
+        //    _db.SaveChanges();
+        //    return true;
+        //}
 
         public int GetNumOfPackages(bool countOpened = true, bool countClosed = true)
         {
@@ -228,46 +261,45 @@ namespace Paczki.Repositories
             return query.Count();
         }
 
-        public int GetNumOfDeliveries()
+        //public int GetNumOfDeliveries()
+        //{
+        //    return _db.Deliveries.Count();
+        //}
+
+        //public int GetNumOfDeliveries(int? id)
+        //{
+        //    return _db.Deliveries.Where(el => el.Id == id).ToList().Count();
+        //}
+
+        private void UpdateDateTime(Package toUpdate)
         {
-            return _db.Deliveries.Count();
+            var prevPackage = _db.Packages.Where(p => p.PackageId == toUpdate.PackageId).Single();
+            if(!toUpdate.Opened && prevPackage.Opened)
+                prevPackage.ClosedDateTime = DateTime.Now;
+            
         }
 
-        public int GetNumOfDeliveries(int? id)
+        public bool UpdatePackage(Package? toUpdate)
         {
-            return _db.Deliveries.Where(el => el.Id == id).ToList().Count();
-        }
-
-        private void UpdateDateTime(Package toUpdate, PackageDtoWithId packageDto)
-        {
-            bool toUpdateIsOpen = toUpdate.Opened;
-            bool packageDtoIsOpen = packageDto.IsOpened;
-            if(toUpdateIsOpen && !packageDtoIsOpen)
-            {
-                // closing
-                toUpdate.ClosedDateTime = DateTime.Now;
-            }
-        }
-
-        public bool UpdatePackage(PackageDtoWithId packageDto)
-        {
-            Package? toUpdate = _db.Packages.Where(p => p.PackageId == packageDto.Id).FirstOrDefault();
             if (toUpdate == null)
             {
                 return false;
             }
-            UpdateDateTime(toUpdate, packageDto);
-            
-
-            toUpdate.Name = packageDto.Name is null ? toUpdate.Name : packageDto.Name;
-            toUpdate.Opened = packageDto.IsOpened;
-            toUpdate.DestinationCity = packageDto.DestinationCity is null ? toUpdate.DestinationCity : packageDto.DestinationCity ;
-            _db.SaveChanges();
+            UpdateDateTime(toUpdate);
+            Package? prevPackage = _db.Packages.Where(p => p.PackageId == toUpdate.PackageId).FirstOrDefault();
+            if (string.IsNullOrEmpty(toUpdate.Name) || prevPackage == null) {
+                return false;
+            }
+            prevPackage.Name = toUpdate.Name;
+            if (string.IsNullOrEmpty(toUpdate.DestinationCity)) {
+                prevPackage.DestinationCity = "";
+            }
+            else 
+                prevPackage.DestinationCity = toUpdate.DestinationCity;
+            prevPackage.Opened = toUpdate.Opened;
             return true;
         }
-
-        
-
+  
         public bool DeletePackage(int? id)
         {
             if (id == null) return false;
@@ -278,9 +310,9 @@ namespace Paczki.Repositories
             _db.SaveChanges();
             return true;
         }
-        public int GetPackagePosition(int? id)
-        {
-            return _db.Packages.ToList().FindIndex(p => p.PackageId == id);
-        }
+        //public int GetPackagePosition(int? id)
+        //{
+        //    return _db.Packages.ToList().FindIndex(p => p.PackageId == id);
+        //}
     }
 }

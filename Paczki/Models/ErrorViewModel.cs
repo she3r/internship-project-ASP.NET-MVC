@@ -1,4 +1,4 @@
-namespace Paczki.Models
+﻿namespace Paczki.Models
 {
     public class ErrorViewModel
     {

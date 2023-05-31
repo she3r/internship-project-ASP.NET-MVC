@@ -117,17 +117,12 @@
 <div>
     @Html.LabelFor(model => model.PageChoice,"wybór strony")
     @Html.EditorFor(model => model.PageChoice, new {@class = "form-control page-choice-input", style="width:0.5cm", min="1"})
-@*    <p id="vertical-space"></p>*@
-@*        <input class="form-control page-choice-input" id="page-choice" name="pageChoice" type="number" value=@currPage style="width:2cm" />*@
-@*        <button type="submit" style="cursor:pointer" class="btn btn-primary">zatwierdz</button>*@
     <br/><br/>
     <div class="btn-group" role="group">
         <button type="submit" formmethod="get" id="change-page-button" asp-action="TurnPage" class="btn btn-primary" style="cursor:pointer">zatwierdź stronę</button>
         <button type="button" class="btn btn-secondary" style="cursor:pointer" onclick="decreasePageChoice()" id="page-prev">poprzednia</button>
         <button type="button" class="btn btn-success" style="cursor:pointer" onclick="incrementPageChoice()" id="page-next">następna</button>
     </div>
-@*        <input type="hidden" class="show-closed-input" value=@Model.ShowClosed.ToString() name="ShowClosed" checked>
-    <input type="hidden" class="show-opened-input" value=@Model.ShowOpen.ToString() name="ShowOpen" checked>*@
 </div>
 
 }
@@ -135,39 +130,39 @@
 
 @section Scripts{
     <script type="text/javascript">
-    var newPackages = [];    // Name: , DestinationCity:
-    var isOpenedOnStart = [];
-    var toDeleteQueryPackageIDs = [];
-    var updatedQueryPackages = [];
-    var tempIdCount = @(maxID + 1);
-    const numToHide = 5;
-    var hiddenEntities = 0;
+    //var newPackages = [];    // Name: , DestinationCity:
+    //var isOpenedOnStart = [];
+    //var toDeleteQueryPackageIDs = [];
+    //var updatedQueryPackages = [];
+    //var tempIdCount = @(maxID + 1);
+    //const numToHide = 5;
+    //var hiddenEntities = 0;
 
-        class Package {
-            constructor(name, city, ID) {
-                this.Name = name;
-                this.City = city;
-                this.TempId = ID;
-            }
-        }
-        class PackageUpdateOpen{
-            constructor(id,isOpened){
-                this.Id = id;
-                this.IsOpened = isOpened;
-            }
-        }
+        //class Package {
+        //    constructor(name, city, ID) {
+        //        this.Name = name;
+        //        this.City = city;
+        //        this.TempId = ID;
+        //    }
+        //}
+        //class PackageUpdateOpen{
+        //    constructor(id,isOpened){
+        //        this.Id = id;
+        //        this.IsOpened = isOpened;
+        //    }
+        //}
 
 
-        function updateQueryPackage(queryID,isOpened){
-            var index = updatedQueryPackages.findIndex(item => item.Id == queryID);
-            if (index < 0) {
-                updatedQueryPackages.push(new PackageUpdateOpen(queryID, isOpened));
-            }
-            else {
-                updatedQueryPackages[index].IsOpened = isOpened;
-            }
-            updateLayoutIsOpened(queryID, isOpened);
-        }
+        //function updateQueryPackage(queryID,isOpened){
+        //    var index = updatedQueryPackages.findIndex(item => item.Id == queryID);
+        //    if (index < 0) {
+        //        updatedQueryPackages.push(new PackageUpdateOpen(queryID, isOpened));
+        //    }
+        //    else {
+        //        updatedQueryPackages[index].IsOpened = isOpened;
+        //    }
+        //    updateLayoutIsOpened(queryID, isOpened);
+        //}
 
         function updateLayoutIsOpened(id, isOpened){
             $("#packages-table tr").each(function () {
@@ -180,100 +175,99 @@
             });
         }
 
-        function openQueryPackage(queryID){
-            updateQueryPackage(queryID,true);
-        }
+        //function openQueryPackage(queryID){
+        //    updateQueryPackage(queryID,true);
+        //}
 
-        function closeQueryPackage(queryID) {
-            updateQueryPackage(queryID,false);
-        }
+        //function closeQueryPackage(queryID) {
+        //    updateQueryPackage(queryID,false);
+        //}
 
         $(window).on('load', function () {
             $("#PageChoice").attr("min", 1);
-                $("#packages-table tr").each(function () {
-                    var id = $(this).attr("id");
-                    isOpenedOnStart.push({
-                        "Id": id, "IsOpen": $(this).find(".openedInfo").text().replace(/[^0-9A-Z]+/gi, "")
-                    });
-            });
-            
+                //$("#packages-table tr").each(function () {
+                //    var id = $(this).attr("id");
+                //    isOpenedOnStart.push({
+                //        "Id": id, "IsOpen": $(this).find(".openedInfo").text().replace(/[^0-9A-Z]+/gi, "")
+                //    });
+            //});           
         });
-        $("#addPackageCandidate").on("click", function(){
-            if(newPackages.length >= 5){
-                alert("Nie można dodać więcej niż 5 paczek bez zapisywania.");
-                return false;
-            }
-            $("#exampleModal").modal('hide');
+        //$("#addPackageCandidate").on("click", function(){
+        //    if(newPackages.length >= 5){
+        //        alert("Nie można dodać więcej niż 5 paczek bez zapisywania.");
+        //        return false;
+        //    }
+        //    $("#exampleModal").modal('hide');
 
-            var candidateName = $("#NewPackageName").val();
-            var candidateCity = $("#NewPackageCity").val();
-            $("#NewPackageName").val("");
-            $("#NewPackageCity").val("");
-            newPackages.push(new Package(candidateName, candidateCity, tempIdCount));
-            tempIdCount++;
-            pushNewPackageToTable();
-        });
+        //    var candidateName = $("#NewPackageName").val();
+        //    var candidateCity = $("#NewPackageCity").val();
+        //    $("#NewPackageName").val("");
+        //    $("#NewPackageCity").val("");
+        //    newPackages.push(new Package(candidateName, candidateCity, tempIdCount));
+        //    tempIdCount++;
+        //    pushNewPackageToTable();
+        //});
 
-        function appendNewRowToTable(){
-            var newRow = newPackages.slice(-1)[0];
-            row = $(`<tr class='temp-package' id='row-${newRow.TempId}'></tr>`);
-            nameCol = $(`<td>${newRow.Name}</td>`);
-            dateBornCol = $("<td><strong>zatwierdź zmiany</strong></td>");
-            dateClosedCol = $("<td><strong>zatwierdź zmiany</strong></td>");
-            isOpenedCol = $("<td><strong>True</strong></td>");
-            cityCol = $(`<td>${newRow.City}</td>`);
-            editCol = $(String.raw`<td><a onclick="alertNotSaved()">Edytuj</a></td>`);
-            openCol = $(String.raw`<td><a  onclick="alertNotSaved()">Otwórz</a></td>`);
-            closeCol = $(String.raw`<td><a  onclick="alertNotSaved()">Zamknij</a></td>`);
-            deleteCol = $(String.raw`<td><a onclick="deleteTemp(` + newRow.TempId + String.raw`)">Usuń</a></td>`)
-            row.append(nameCol, dateBornCol, dateClosedCol, isOpenedCol, cityCol, editCol, openCol, closeCol, deleteCol).prependTo("#packages-table");
-        }
+        //function appendNewRowToTable(){
+        //    var newRow = newPackages.slice(-1)[0];
+        //    row = $(`<tr class='temp-package' id='row-${newRow.TempId}'></tr>`);
+        //    nameCol = $(`<td>${newRow.Name}</td>`);
+        //    dateBornCol = $("<td><strong>zatwierdź zmiany</strong></td>");
+        //    dateClosedCol = $("<td><strong>zatwierdź zmiany</strong></td>");
+        //    isOpenedCol = $("<td><strong>True</strong></td>");
+        //    cityCol = $(`<td>${newRow.City}</td>`);
+        //    editCol = $(String.raw`<td><a onclick="alertNotSaved()">Edytuj</a></td>`);
+        //    openCol = $(String.raw`<td><a  onclick="alertNotSaved()">Otwórz</a></td>`);
+        //    closeCol = $(String.raw`<td><a  onclick="alertNotSaved()">Zamknij</a></td>`);
+        //    deleteCol = $(String.raw`<td><a onclick="deleteTemp(` + newRow.TempId + String.raw`)">Usuń</a></td>`)
+        //    row.append(nameCol, dateBornCol, dateClosedCol, isOpenedCol, cityCol, editCol, openCol, closeCol, deleteCol).prependTo("#packages-table");
+        //}
 
-        function deleteTemp(id) {
-            $("#packages-table tr").each(function(){
-                if ($(this).attr("id") == `row-${id}`) {
-                    $(this).remove();               
-                }
-            });
-            newPackages = newPackages.filter(item => item.TempId != id);
-            unhideLastRowInTable();
-            return false;
-        }
-        function deleteQueryPackage(id){
-            if(confirm("Czy na pewno chcesz usunąć paczkę?")){
-                alert("Trwałe usunięcie paczki po zatwierdzeniu wszystkich zmian.");
-                $("#packages-table tr").each(function () {
-                    if ($(this).attr("id") == `row-${id}`) {
-                        $(this).remove();
-                    }
-                });
-                toDeleteQueryPackageIDs.push(id);
-                unhideLastRowInTable();
-            }
-            //return false;
-        }
+        //function deleteTemp(id) {
+        //    $("#packages-table tr").each(function(){
+        //        if ($(this).attr("id") == `row-${id}`) {
+        //            $(this).remove();               
+        //        }
+        //    });
+        //    newPackages = newPackages.filter(item => item.TempId != id);
+        //    unhideLastRowInTable();
+        //    return false;
+        //}
+        //function deleteQueryPackage(id){
+        //    if(confirm("Czy na pewno chcesz usunąć paczkę?")){
+        //        alert("Trwałe usunięcie paczki po zatwierdzeniu wszystkich zmian.");
+        //        $("#packages-table tr").each(function () {
+        //            if ($(this).attr("id") == `row-${id}`) {
+        //                $(this).remove();
+        //            }
+        //        });
+        //        toDeleteQueryPackageIDs.push(id);
+        //        unhideLastRowInTable();
+        //    }
+        //    //return false;
+        //}
 
-        function alertNotSaved(){
-            alert("Zapisz wszystko aby dokonywać operacji na paczkach")
-        }
+        //function alertNotSaved(){
+        //    alert("Zapisz wszystko aby dokonywać operacji na paczkach")
+        //}
 
-        function hideLastRowInTable(){
-            hiddenEntities++;
-            $(`#packages-table tr:nth-child(${numToHide})`).hide();
-        }
+        //function hideLastRowInTable(){
+        //    hiddenEntities++;
+        //    $(`#packages-table tr:nth-child(${numToHide})`).hide();
+        //}
 
-        function unhideLastRowInTable(){
-            var numToUnhide = numToHide;
-            $(`#packages-table tr:nth-child(${numToUnhide})`).show();
-        }
+        //function unhideLastRowInTable(){
+        //    var numToUnhide = numToHide;
+        //    $(`#packages-table tr:nth-child(${numToUnhide})`).show();
+        //}
 
-        function pushNewPackageToTable(){
-            var currNumOfRowsOnPage = @Model.Query.Count() + newPackages.length;
-            if(currNumOfRowsOnPage > 5){    // jesli w tabeli jest wiecej niz 5 elementow
-                hideLastRowInTable();
-            }
-            appendNewRowToTable();
-        }
+        //function pushNewPackageToTable(){
+        //    var currNumOfRowsOnPage = @Model.Query.Count() + newPackages.length;
+        //    if(currNumOfRowsOnPage > 5){    // jesli w tabeli jest wiecej niz 5 elementow
+        //        hideLastRowInTable();
+        //    }
+        //    appendNewRowToTable();
+        //}
         
         function incrementPageChoice() {
             var currPageItem = parseInt($("#PageChoice").val());
@@ -303,26 +297,9 @@
             $(".show-closed-input").val(value);
         });
 
-
-
-        //$(document).delegate(".open-button","click",function(){
-        //    var isOpened = $(this).closest("tr").find(".openedInfo").text();
-        //    isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
-        //    //alert(isOpened);
-        //    return (isOpened != 'True');
-        //});
-
-        //$(document).delegate(".close-button", "click", function () {
-        //    var isOpened = $(this).closest("tr").find(".openedInfo").text();
-        //    isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
-        //    //alert(isOpened);
-        //    return (isOpened == 'True');
-        //});
-
         $(document).delegate(".edit-button", "click", function(){
             var isOpened = $(this).closest("tr").find(".openedInfo").text();
             var rowId = $(this).closest("tr").attr("id");
-            //alert(rowId);
             isOpened = isOpened.replace(/[^0-9A-Z]+/gi, "");
             isOpened = (isOpened == 'True');
             if(!isOpened){
@@ -334,16 +311,16 @@
            
         });
 
-        $("#accept-all-button").on("click", function(){
-            //alert("dada");
-            if(confirm("Czy na pewno chcesz zapisac zmiany?")){
-                $("#NewPackagesJSON").val(JSON.stringify(newPackages));
-                $("#ToDeleteQueryPackageIDsJSON").val(JSON.stringify(toDeleteQueryPackageIDs));
-                $("#ToUpdateQueryPackagesJSON").val(JSON.stringify(updatedQueryPackages));
-                return true;
-            }
-            return false;
-        });
+        //$("#accept-all-button").on("click", function(){
+        //    //alert("dada");
+        //    if(confirm("Czy na pewno chcesz zapisac zmiany?")){
+        //        $("#NewPackagesJSON").val(JSON.stringify(newPackages));
+        //        $("#ToDeleteQueryPackageIDsJSON").val(JSON.stringify(toDeleteQueryPackageIDs));
+        //        $("#ToUpdateQueryPackagesJSON").val(JSON.stringify(updatedQueryPackages));
+        //        return true;
+        //    }
+        //    return false;
+        //});
 
         $(".delete-button").on("click", function(){
             return confirm("Czy na pewno chcesz kontynować? Usunięcie spowoduje trwałą utratę danych.");
