@@ -96,17 +96,25 @@
     //var _foundDeliveries;
     //var modifiedFoundDeliveries = [];
     //var toRemoveFoundDeliveriesIds = [];
-    //var currPackageName;
+    var currPackageName;
     //var currPackageCity;
 
         $(window).on('load', function () {
 
             var limitReached = @((TempData["AddNewEmptyDelivery"] != null).ToString().ToLower());
+            currPackageName = $("#Package_Name").val();
             if(limitReached == true){
                 alert('@TempData["AddNewEmptyDelivery"]');
             }
         }
         );
+
+        $("#resetButton").on("click", function(){
+            if ($("#Package_Name").val() == "") {
+                $("#Package_Name").val(currPackageName);
+            }
+            return true;
+        })
 
         $("#submit-all-button").on("click", function(){
             if ($("#Package_Name").val() == ''){
